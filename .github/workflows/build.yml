@@ -270,4 +270,18 @@ jobs:
               v.setTextViewText(R.id.ht2, ft(second.height))
 
               v.setTextViewText(R.id.range, ft(Math.abs(first.height - second.height)))
-              v.se
+              
+              v.setTextViewText(
+                  R.id.updated,
+                  "Updated ${SimpleDateFormat("h:mm a", Locale.getDefault()).format(now)} \u00B7 tap to refresh"
+              )
+              return v
+          }
+          EOF
+      - name: Build APK
+        run: gradle assembleDebug
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          files: app/build/outputs/apk/debug/app-debug.apk
