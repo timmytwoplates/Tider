@@ -98,18 +98,54 @@ jobs:
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:padding="14dp"
+              android:padding="16dp"
               android:background="@drawable/bg">
-              <TextView android:id="@+id/status" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:textSize="20sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-              <TextView android:id="@+id/high" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:layout_marginTop="6dp" android:textSize="15sp" android:textColor="#FFFFFF" />
-              <TextView android:id="@+id/low" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:textSize="15sp" android:textColor="#FFFFFF" />
-              <TextView android:id="@+id/range" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:textSize="15sp" android:textColor="#B0BEC5" />
-              <TextView android:id="@+id/updated" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:layout_marginTop="4dp" android:textSize="11sp" android:textColor="#78909C" />
+
+              <TextView android:id="@+id/status"
+                  android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:textSize="22sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+
+              <TextView android:id="@+id/lbl1"
+                  android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:layout_marginTop="10dp"
+                  android:textSize="11sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+                  <TextView android:id="@+id/time1"
+                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                      android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                  <TextView android:id="@+id/ht1"
+                      android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:textSize="16sp" android:textColor="#FFFFFF" />
+              </LinearLayout>
+
+              <TextView android:id="@+id/lbl2"
+                  android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:layout_marginTop="8dp"
+                  android:textSize="11sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+                  <TextView android:id="@+id/time2"
+                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                      android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                  <TextView android:id="@+id/ht2"
+                      android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:textSize="16sp" android:textColor="#FFFFFF" />
+              </LinearLayout>
+
+              <TextView android:id="@+id/lblRange"
+                  android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:layout_marginTop="8dp"
+                  android:text="RANGE"
+                  android:textSize="11sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
+              <TextView android:id="@+id/range"
+                  android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+
+              <TextView android:id="@+id/updated"
+                  android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:layout_marginTop="8dp"
+                  android:textSize="11sp" android:textColor="#78909C" />
           </LinearLayout>
           EOF
 
@@ -201,40 +237,37 @@ jobs:
 
               val now = Date()
               val upcoming = events?.filter { it.time.after(now) } ?: emptyList()
-              val next = upcoming.firstOrNull()
-              val high = upcoming.firstOrNull { it.isHigh }
-              val low = upcoming.firstOrNull { !it.isHigh }
+              val first = upcoming.getOrNull(0)
+              val second = upcoming.getOrNull(1)
 
-              if (next == null || high == null || low == null) {
+              if (first == null || second == null) {
                   v.setTextViewText(R.id.status, "No tide data")
-                  v.setTextViewText(R.id.high, "Check connection")
-                  v.setTextViewText(R.id.low, "")
+                  v.setTextViewText(R.id.lbl1, "")
+                  v.setTextViewText(R.id.time1, "Check connection")
+                  v.setTextViewText(R.id.ht1, "")
+                  v.setTextViewText(R.id.lbl2, "")
+                  v.setTextViewText(R.id.time2, "")
+                  v.setTextViewText(R.id.ht2, "")
                   v.setTextViewText(R.id.range, "")
                   v.setTextViewText(R.id.updated, "Tap to retry")
                   return v
               }
 
-              if (next.isHigh) {
+              if (first.isHigh) {
                   v.setTextViewText(R.id.status, "\u25B2 RISING")
                   v.setTextColor(R.id.status, 0xFF4FC3F7.toInt())
               } else {
                   v.setTextViewText(R.id.status, "\u25BC FALLING")
                   v.setTextColor(R.id.status, 0xFFFFB74D.toInt())
               }
-              v.setTextViewText(R.id.high, "High  ${fmt(high.time, now)}  ${ft(high.height)}")
-              v.setTextViewText(R.id.low, "Low   ${fmt(low.time, now)}  ${ft(low.height)}")
-              v.setTextViewText(R.id.range, "Range  ${ft(Math.abs(high.height - low.height))}")
-              v.setTextViewText(
-                  R.id.updated,
-                  "Updated ${SimpleDateFormat("h:mm a", Locale.getDefault()).format(now)} \u00B7 tap to refresh"
-              )
-              return v
-          }
-          EOF
-      - name: Build APK
-        run: gradle assembleDebug
-      - name: Publish release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-${{ github.run_number }}
-          files: app/build/outputs/apk/debug/app-debug.apk
+
+              v.setTextViewText(R.id.lbl1, if (first.isHigh) "NEXT HIGH" else "NEXT LOW")
+              v.setTextViewText(R.id.time1, fmt(first.time, now))
+              v.setTextViewText(R.id.ht1, ft(first.height))
+
+              v.setTextViewText(R.id.lbl2, if (second.isHigh) "THEN HIGH" else "THEN LOW")
+              v.setTextViewText(R.id.time2, fmt(second.time, now))
+              v.setTextViewText(R.id.ht2, ft(second.height))
+
+              v.setTextViewText(R.id.range, ft(Math.abs(first.height - second.height)))
+              v.se
