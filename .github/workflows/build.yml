@@ -62,7 +62,16 @@ jobs:
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
               <application android:label="Tide Widget">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
                   <receiver android:name=".TideWidget" android:exported="true">
                       <intent-filter>
                           <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -142,43 +151,155 @@ jobs:
                   android:layout_width="wrap_content" android:layout_height="wrap_content"
                   android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
 
+              <TextView android:id="@+id/station"
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:layout_marginTop="10dp"
+                  android:maxLines="1" android:ellipsize="end"
+                  android:textSize="12sp" android:textColor="#B0BEC5" />
               <TextView android:id="@+id/updated"
                   android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:layout_marginTop="8dp"
+                  android:layout_marginTop="2dp"
                   android:textSize="11sp" android:textColor="#78909C" />
           </LinearLayout>
+          EOF
+
+          cat > app/src/main/java/com/example/tidewidget/MainActivity.kt <<'EOF'
+          package com.example.tidewidget
+
+          import android.Manifest
+          import android.app.Activity
+          import android.appwidget.AppWidgetManager
+          import android.content.ComponentName
+          import android.content.Intent
+          import android.content.pm.PackageManager
+          import android.os.Build
+          import android.os.Bundle
+          import android.widget.Button
+          import android.widget.LinearLayout
+          import android.widget.TextView
+
+          class MainActivity : Activity() {
+              private lateinit var info: TextView
+              private lateinit var button: Button
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  val pad = (24 * resources.displayMetrics.density).toInt()
+                  val root = LinearLayout(this)
+                  root.orientation = LinearLayout.VERTICAL
+                  root.setPadding(pad, pad * 2, pad, pad)
+                  info = TextView(this)
+                  info.textSize = 16f
+                  button = Button(this)
+                  button.setOnClickListener { askNext() }
+                  root.addView(info)
+                  root.addView(button)
+                  setContentView(root)
+              }
+
+              override fun onResume() {
+                  super.onResume()
+                  refresh()
+                  if (has(Manifest.permission.ACCESS_FINE_LOCATION)) updateWidgets()
+              }
+
+              private fun has(p: String): Boolean =
+                  checkSelfPermission(p) == PackageManager.PERMISSION_GRANTED
+
+              private fun needsBackground(): Boolean =
+                  Build.VERSION.SDK_INT >= 29 && !has(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+              private fun askNext() {
+                  if (!has(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                      requestPermissions(
+                          arrayOf(
+                              Manifest.permission.ACCESS_FINE_LOCATION,
+                              Manifest.permission.ACCESS_COARSE_LOCATION
+                          ), 1
+                      )
+                  } else if (needsBackground()) {
+                      requestPermissions(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), 2)
+                  }
+              }
+
+              override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) {
+                  super.onRequestPermissionsResult(code, perms, results)
+                  refresh()
+                  if (has(Manifest.permission.ACCESS_FINE_LOCATION)) updateWidgets()
+              }
+
+              private fun refresh() {
+                  if (!has(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                      info.text = "Step 1 of 2: allow precise location so the widget can find your nearest NOAA tide station."
+                      button.text = "Allow location"
+                      button.isEnabled = true
+                  } else if (needsBackground()) {
+                      info.text = "Step 2 of 2: so the widget can update from the home screen, choose Location, then Allow all the time."
+                      button.text = "Allow all the time"
+                      button.isEnabled = true
+                  } else {
+                      info.text = "All set. Add the Tide Widget from your home screen widget list. Tap the widget to refresh it."
+                      button.text = "Done"
+                      button.isEnabled = false
+                  }
+              }
+
+              private fun updateWidgets() {
+                  val mgr = AppWidgetManager.getInstance(this)
+                  val ids = mgr.getAppWidgetIds(ComponentName(this, TideWidget::class.java))
+                  if (ids.isNotEmpty()) {
+                      val i = Intent(this, TideWidget::class.java)
+                      i.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                      i.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                      sendBroadcast(i)
+                  }
+              }
+          }
           EOF
 
           cat > app/src/main/java/com/example/tidewidget/TideWidget.kt <<'EOF'
           package com.example.tidewidget
 
+          import android.Manifest
+          import android.annotation.SuppressLint
           import android.app.PendingIntent
           import android.appwidget.AppWidgetManager
           import android.appwidget.AppWidgetProvider
           import android.content.Context
           import android.content.Intent
+          import android.content.pm.PackageManager
+          import android.location.Location
+          import android.location.LocationListener
+          import android.location.LocationManager
+          import android.os.Bundle
+          import android.os.Looper
           import android.widget.RemoteViews
           import org.json.JSONObject
+          import java.io.File
           import java.net.HttpURLConnection
           import java.net.URL
           import java.text.SimpleDateFormat
           import java.util.Calendar
           import java.util.Date
           import java.util.Locale
+          import java.util.TimeZone
+          import java.util.concurrent.CountDownLatch
+          import java.util.concurrent.TimeUnit
           import kotlin.concurrent.thread
 
-          // NOAA station ID. Change this to use a different location.
-          private const val STATION = "8658163"
-
           data class TideEvent(val time: Date, val height: Double, val isHigh: Boolean)
+          data class Station(val id: String, val name: String, val lat: Double, val lng: Double)
+          data class Loaded(val events: List<TideEvent>?, val label: String, val note: String?)
+
+          private const val STALE_MS = 30L * 60 * 1000
 
           class TideWidget : AppWidgetProvider() {
               override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
                   val pending = goAsync()
                   thread {
                       try {
-                          val events = try { fetchTides() } catch (e: Exception) { null }
-                          manager.updateAppWidget(ids, buildViews(context, events, ids))
+                          val result = try { compute(context) } catch (e: Exception) { Loaded(null, "", null) }
+                          manager.updateAppWidget(ids, buildViews(context, result, ids))
                       } finally {
                           pending.finish()
                       }
@@ -186,34 +307,164 @@ jobs:
               }
           }
 
-          private fun fetchTides(): List<TideEvent> {
-              val day = SimpleDateFormat("yyyyMMdd", Locale.US)
-              val start = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }.time
-              val end = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 3) }.time
-              val url = URL(
-                  "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter" +
-                  "?product=predictions&application=TideWidget" +
-                  "&begin_date=${day.format(start)}&end_date=${day.format(end)}" +
-                  "&datum=MLLW&station=$STATION&time_zone=lst_ldt&units=english" +
-                  "&interval=hilo&format=json"
-              )
-              val conn = url.openConnection() as HttpURLConnection
+          private fun httpGet(address: String): String {
+              val conn = URL(address).openConnection() as HttpURLConnection
               conn.connectTimeout = 10000
-              conn.readTimeout = 10000
+              conn.readTimeout = 15000
               try {
-                  val body = conn.inputStream.bufferedReader().readText()
-                  val arr = JSONObject(body).getJSONArray("predictions")
-                  val parse = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
-                  val out = ArrayList<TideEvent>()
-                  for (i in 0 until arr.length()) {
-                      val o = arr.getJSONObject(i)
-                      val t = parse.parse(o.getString("t")) ?: continue
-                      out.add(TideEvent(t, o.getString("v").toDouble(), o.getString("type") == "H"))
-                  }
-                  return out.sortedBy { it.time }
+                  return conn.inputStream.bufferedReader().readText()
               } finally {
                   conn.disconnect()
               }
+          }
+
+          private fun distKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+              val r = 6371.0
+              val dLat = Math.toRadians(lat2 - lat1)
+              val dLng = Math.toRadians(lng2 - lng1)
+              val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                  Math.sin(dLng / 2) * Math.sin(dLng / 2)
+              return 2 * r * Math.asin(Math.sqrt(a))
+          }
+
+          @SuppressLint("MissingPermission")
+          private fun getLocation(context: Context): Location? {
+              val fine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+              val coarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+              if (!fine && !coarse) return null
+              val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+              val now = System.currentTimeMillis()
+
+              val candidates = ArrayList<Location>()
+              for (p in lm.getProviders(true)) {
+                  try {
+                      val l = lm.getLastKnownLocation(p)
+                      if (l != null) candidates.add(l)
+                  } catch (e: Exception) { }
+              }
+              val fresh = candidates.filter { now - it.time < STALE_MS }
+              var best: Location? = if (fresh.isNotEmpty()) {
+                  fresh.minByOrNull { it.accuracy }
+              } else {
+                  candidates.maxByOrNull { it.time }
+              }
+
+              val current = best
+              if (fine && (current == null || now - current.time > STALE_MS)) {
+                  val provider = when {
+                      lm.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+                      lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+                      else -> null
+                  }
+                  if (provider != null) {
+                      val latch = CountDownLatch(1)
+                      val holder = arrayOfNulls<Location>(1)
+                      val listener = object : LocationListener {
+                          override fun onLocationChanged(location: Location) {
+                              holder[0] = location
+                              latch.countDown()
+                          }
+                          override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) { }
+                          override fun onProviderEnabled(provider: String) { }
+                          override fun onProviderDisabled(provider: String) { }
+                      }
+                      try {
+                          lm.requestSingleUpdate(provider, listener, Looper.getMainLooper())
+                          latch.await(5, TimeUnit.SECONDS)
+                      } catch (e: Exception) { }
+                      try { lm.removeUpdates(listener) } catch (e: Exception) { }
+                      val fix = holder[0]
+                      if (fix != null) best = fix
+                  }
+              }
+              return best
+          }
+
+          private fun loadStations(context: Context): List<Station> {
+              val f = File(context.filesDir, "stations.json")
+              val stale = !f.exists() || System.currentTimeMillis() - f.lastModified() > 30L * 24 * 3600 * 1000
+              if (stale) {
+                  try {
+                      val body = httpGet("https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=tidepredictions")
+                      JSONObject(body).getJSONArray("stations")
+                      f.writeText(body)
+                  } catch (e: Exception) {
+                      if (!f.exists()) throw e
+                  }
+              }
+              val arr = JSONObject(f.readText()).getJSONArray("stations")
+              val out = ArrayList<Station>()
+              for (i in 0 until arr.length()) {
+                  val o = arr.getJSONObject(i)
+                  if (!o.has("lat") || !o.has("lng")) continue
+                  out.add(Station(o.getString("id"), o.optString("name", "Station"), o.getDouble("lat"), o.getDouble("lng")))
+              }
+              return out
+          }
+
+          private fun compute(context: Context): Loaded {
+              val prefs = context.getSharedPreferences("tide", Context.MODE_PRIVATE)
+              val loc = getLocation(context)
+              var note: String? = null
+
+              if (loc != null) {
+                  val needPick = !prefs.contains("id") ||
+                      distKm(loc.latitude, loc.longitude,
+                          prefs.getFloat("clat", 0f).toDouble(), prefs.getFloat("clng", 0f).toDouble()) > 3.0
+                  if (needPick) {
+                      val nearest = loadStations(context).minByOrNull {
+                          distKm(loc.latitude, loc.longitude, it.lat, it.lng)
+                      }
+                      if (nearest != null) {
+                          prefs.edit()
+                              .putString("id", nearest.id)
+                              .putString("name", nearest.name)
+                              .putFloat("slat", nearest.lat.toFloat())
+                              .putFloat("slng", nearest.lng.toFloat())
+                              .putFloat("clat", loc.latitude.toFloat())
+                              .putFloat("clng", loc.longitude.toFloat())
+                              .apply()
+                      }
+                  }
+              } else if (!prefs.contains("id")) {
+                  note = "Open the app to enable location"
+              }
+
+              val id = prefs.getString("id", null) ?: return Loaded(null, "", note ?: "No station found")
+              val name = prefs.getString("name", "Station") ?: "Station"
+              var label = name
+              if (loc != null) {
+                  val km = distKm(loc.latitude, loc.longitude,
+                      prefs.getFloat("slat", 0f).toDouble(), prefs.getFloat("slng", 0f).toDouble())
+                  label = name + " \u00B7 " + String.format(Locale.US, "%.1f mi", km * 0.621371)
+              }
+              val events = try { fetchTides(id) } catch (e: Exception) { null }
+              return Loaded(events, label, note)
+          }
+
+          private fun fetchTides(station: String): List<TideEvent> {
+              val day = SimpleDateFormat("yyyyMMdd", Locale.US)
+              day.timeZone = TimeZone.getTimeZone("UTC")
+              val start = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }.time
+              val end = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 3) }.time
+              val body = httpGet(
+                  "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter" +
+                  "?product=predictions&application=TideWidget" +
+                  "&begin_date=${day.format(start)}&end_date=${day.format(end)}" +
+                  "&datum=MLLW&station=$station&time_zone=gmt&units=english" +
+                  "&interval=hilo&format=json"
+              )
+              val arr = JSONObject(body).getJSONArray("predictions")
+              val parse = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+              parse.timeZone = TimeZone.getTimeZone("UTC")
+              val out = ArrayList<TideEvent>()
+              for (i in 0 until arr.length()) {
+                  val o = arr.getJSONObject(i)
+                  val t = parse.parse(o.getString("t")) ?: continue
+                  out.add(TideEvent(t, o.getString("v").toDouble(), o.getString("type") == "H"))
+              }
+              return out.sortedBy { it.time }
           }
 
           private fun fmt(d: Date, now: Date): String {
@@ -224,7 +475,7 @@ jobs:
 
           private fun ft(x: Double): String = String.format(Locale.US, "%.1f ft", x)
 
-          private fun buildViews(context: Context, events: List<TideEvent>?, ids: IntArray): RemoteViews {
+          private fun buildViews(context: Context, r: Loaded, ids: IntArray): RemoteViews {
               val v = RemoteViews(context.packageName, R.layout.widget)
               val tap = Intent(context, TideWidget::class.java).apply {
                   action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
@@ -236,14 +487,16 @@ jobs:
               )
 
               val now = Date()
-              val upcoming = events?.filter { it.time.after(now) } ?: emptyList()
+              val upcoming = r.events?.filter { it.time.after(now) } ?: emptyList()
               val first = upcoming.getOrNull(0)
               val second = upcoming.getOrNull(1)
+
+              v.setTextViewText(R.id.station, r.label)
 
               if (first == null || second == null) {
                   v.setTextViewText(R.id.status, "No tide data")
                   v.setTextViewText(R.id.lbl1, "")
-                  v.setTextViewText(R.id.time1, "Check connection")
+                  v.setTextViewText(R.id.time1, r.note ?: "Check connection")
                   v.setTextViewText(R.id.ht1, "")
                   v.setTextViewText(R.id.lbl2, "")
                   v.setTextViewText(R.id.time2, "")
@@ -270,7 +523,6 @@ jobs:
               v.setTextViewText(R.id.ht2, ft(second.height))
 
               v.setTextViewText(R.id.range, ft(Math.abs(first.height - second.height)))
-              
               v.setTextViewText(
                   R.id.updated,
                   "Updated ${SimpleDateFormat("h:mm a", Locale.getDefault()).format(now)} \u00B7 tap to refresh"
