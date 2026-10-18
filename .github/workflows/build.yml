@@ -91,8 +91,10 @@ jobs:
 
           cat > app/src/main/res/xml/tide_widget_info.xml <<'EOF'
           <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-              android:minWidth="180dp"
-              android:minHeight="110dp"
+              android:minWidth="250dp"
+              android:minHeight="180dp"
+              android:targetCellWidth="4"
+              android:targetCellHeight="3"
               android:updatePeriodMillis="1800000"
               android:initialLayout="@layout/widget"
               android:resizeMode="horizontal|vertical"
@@ -112,59 +114,103 @@ jobs:
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:padding="16dp"
+              android:padding="12dp"
               android:background="@drawable/bg">
 
-              <TextView android:id="@+id/status"
-                  android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:textSize="22sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-
-              <TextView android:id="@+id/lbl1"
-                  android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:layout_marginTop="10dp"
-                  android:textSize="11sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                   android:orientation="horizontal">
-                  <TextView android:id="@+id/time1"
+                  <TextView android:id="@+id/status"
                       android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                      android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-                  <TextView android:id="@+id/ht1"
+                      android:textSize="20sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                  <TextView android:id="@+id/countdown"
                       android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:textSize="16sp" android:textColor="#FFFFFF" />
+                      android:textSize="13sp" android:textStyle="bold" android:textColor="#FFD54F" />
               </LinearLayout>
 
-              <TextView android:id="@+id/lbl2"
-                  android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:layout_marginTop="8dp"
-                  android:textSize="11sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal">
-                  <TextView android:id="@+id/time2"
-                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                      android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-                  <TextView android:id="@+id/ht2"
-                      android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:textSize="16sp" android:textColor="#FFFFFF" />
+                  android:orientation="horizontal" android:layout_marginTop="4dp">
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/lbl1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="10sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
+                      <TextView android:id="@+id/time1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="15sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/ht1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="13sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/lbl2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="10sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
+                      <TextView android:id="@+id/time2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="15sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/ht2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="13sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
               </LinearLayout>
 
-              <TextView android:id="@+id/lblRange"
-                  android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:layout_marginTop="8dp"
-                  android:text="RANGE"
-                  android:textSize="11sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
-              <TextView android:id="@+id/range"
-                  android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal" android:layout_marginTop="4dp">
+                  <TextView android:id="@+id/now"
+                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                      android:maxLines="1" android:ellipsize="end"
+                      android:textSize="12sp" android:textColor="#FFFFFF" />
+                  <TextView android:id="@+id/range"
+                      android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:textSize="12sp" android:textStyle="bold" android:textColor="#B0BEC5" />
+              </LinearLayout>
+
+              <ImageView android:id="@+id/curve"
+                  android:layout_width="match_parent" android:layout_height="52dp"
+                  android:layout_marginTop="4dp"
+                  android:scaleType="fitXY" />
+
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal" android:layout_marginTop="4dp">
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/sun1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/sun2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/moon1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/moon2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
+              </LinearLayout>
+
+              <TextView android:id="@+id/phase"
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:layout_marginTop="2dp" android:maxLines="1" android:ellipsize="end"
+                  android:textSize="12sp" android:textColor="#B0BEC5" />
+              <TextView android:id="@+id/cond"
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:maxLines="1" android:ellipsize="end"
+                  android:textSize="12sp" android:textColor="#FFFFFF" />
 
               <TextView android:id="@+id/station"
                   android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:layout_marginTop="10dp"
+                  android:layout_marginTop="4dp"
                   android:maxLines="1" android:ellipsize="end"
-                  android:textSize="12sp" android:textColor="#B0BEC5" />
+                  android:textSize="11sp" android:textColor="#B0BEC5" />
               <TextView android:id="@+id/updated"
-                  android:layout_width="wrap_content" android:layout_height="wrap_content"
-                  android:layout_marginTop="2dp"
-                  android:textSize="11sp" android:textColor="#78909C" />
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:maxLines="1" android:ellipsize="end"
+                  android:textSize="10sp" android:textColor="#78909C" />
           </LinearLayout>
           EOF
 
@@ -180,6 +226,7 @@ jobs:
           import android.os.Looper
           import android.widget.Button
           import android.widget.LinearLayout
+          import android.widget.ScrollView
           import android.widget.TextView
           import java.text.SimpleDateFormat
           import java.util.Date
@@ -213,12 +260,15 @@ jobs:
                       handler.postDelayed({ showStatus() }, 4000)
                       handler.postDelayed({ showStatus() }, 12000)
                       handler.postDelayed({ showStatus() }, 30000)
+                      handler.postDelayed({ showStatus() }, 60000)
                   }
                   root.addView(info)
                   root.addView(button)
-                  root.addView(statusView)
                   root.addView(refreshButton)
-                  setContentView(root)
+                  root.addView(statusView)
+                  val scroll = ScrollView(this)
+                  scroll.addView(root)
+                  setContentView(scroll)
               }
 
               override fun onResume() {
@@ -279,13 +329,14 @@ jobs:
                   val p = getSharedPreferences("tide", MODE_PRIVATE)
                   val st = p.getString("status", "not run yet")
                   val label = p.getString("label", "none yet")
+                  val detail = p.getString("detail", "") ?: ""
                   val at = p.getLong("statusAt", 0L)
                   val whenText = if (at > 0L) {
                       SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(at))
                   } else {
                       "-"
                   }
-                  statusView.text = "Station: $label\nLast run ($whenText): $st"
+                  statusView.text = "Station: $label\nLast run ($whenText): $st\n\n$detail"
               }
           }
           EOF
@@ -303,6 +354,10 @@ jobs:
           import android.content.Intent
           import android.content.SharedPreferences
           import android.content.pm.PackageManager
+          import android.graphics.Bitmap
+          import android.graphics.Canvas
+          import android.graphics.Paint
+          import android.graphics.Path
           import android.location.Location
           import android.location.LocationListener
           import android.location.LocationManager
@@ -325,17 +380,22 @@ jobs:
           import java.net.HttpURLConnection
           import java.net.URL
           import java.text.SimpleDateFormat
+          import java.util.Calendar
           import java.util.Date
           import java.util.Locale
           import java.util.TimeZone
           import java.util.concurrent.CountDownLatch
           import java.util.concurrent.TimeUnit
 
-          // How many hours of tide data to pull each time.
+          // Hours of tide predictions to pull each time.
           private const val HOURS_AHEAD = 24
+          private const val HOURS_BEHIND = 8
           private const val ACTION_REFRESH = "com.example.tidewidget.REFRESH"
+          private const val HOUR = 3600000L
           private const val STALE_MS = 30L * 60 * 1000
-          private const val REFETCH_MS = 3L * 3600 * 1000
+          private const val REFETCH_MS = 3L * HOUR
+          private const val OBS_MAX_AGE_MS = 3L * HOUR
+          private val OBS_PRODUCTS = listOf("water_level", "water_temperature", "air_temperature", "wind")
 
           data class TideEvent(val time: Date, val height: Double, val isHigh: Boolean)
           data class Station(val id: String, val name: String, val lat: Double, val lng: Double)
@@ -348,9 +408,15 @@ jobs:
               }
 
               override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-                  manager.updateAppWidget(ids, buildViews(context))
+                  for (id in ids) {
+                      manager.updateAppWidget(id, buildViews(context, manager, id))
+                  }
                   schedulePeriodic(context)
                   refreshNow(context, false, false)
+              }
+
+              override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, newOptions: Bundle) {
+                  manager.updateAppWidget(id, buildViews(context, manager, id))
               }
 
               override fun onReceive(context: Context, intent: Intent) {
@@ -376,8 +442,7 @@ jobs:
                       updateAllWidgets(c)
                       Result.success()
                   } catch (e: Exception) {
-                      val msg = (e.javaClass.simpleName + ": " + (e.message ?: "")).take(90)
-                      setStatus(c, msg)
+                      setStatus(c, shortErr(e))
                       updateAllWidgets(c)
                       if (runAttemptCount < 4) Result.retry() else Result.success()
                   }
@@ -407,20 +472,29 @@ jobs:
           fun updateAllWidgets(context: Context) {
               val mgr = AppWidgetManager.getInstance(context)
               val ids = mgr.getAppWidgetIds(ComponentName(context, TideWidget::class.java))
-              if (ids.isNotEmpty()) mgr.updateAppWidget(ids, buildViews(context))
+              for (id in ids) {
+                  mgr.updateAppWidget(id, buildViews(context, mgr, id))
+              }
           }
 
           private fun prefs(c: Context): SharedPreferences =
               c.getSharedPreferences("tide", Context.MODE_PRIVATE)
 
+          private fun shortErr(e: Exception): String =
+              (e.javaClass.simpleName + ": " + (e.message ?: "")).take(90)
+
           private fun setStatus(c: Context, msg: String) {
-              prefs(c).edit().putString("status", msg).putLong("statusAt", System.currentTimeMillis()).apply()
+              val ed = prefs(c).edit()
+              ed.putString("status", msg)
+              ed.putLong("statusAt", System.currentTimeMillis())
+              if (msg == "ok") ed.putLong("okAt", System.currentTimeMillis())
+              ed.apply()
           }
 
-          private fun httpGet(address: String): String {
+          private fun httpGet(address: String, timeoutMs: Int): String {
               val conn = URL(address).openConnection() as HttpURLConnection
-              conn.connectTimeout = 15000
-              conn.readTimeout = 30000
+              conn.connectTimeout = Math.min(timeoutMs, 15000)
+              conn.readTimeout = timeoutMs
               try {
                   return conn.inputStream.bufferedReader().readText()
               } finally {
@@ -492,12 +566,12 @@ jobs:
               return best
           }
 
-          private fun loadStations(context: Context): List<Station> {
-              val f = File(context.filesDir, "stations.json")
-              val stale = !f.exists() || System.currentTimeMillis() - f.lastModified() > 30L * 24 * 3600 * 1000
+          private fun loadStationFile(context: Context, type: String, name: String): List<Station> {
+              val f = File(context.filesDir, name)
+              val stale = !f.exists() || System.currentTimeMillis() - f.lastModified() > 30L * 24 * HOUR
               if (stale) {
                   try {
-                      val body = httpGet("https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=tidepredictions")
+                      val body = httpGet("https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=" + type, 30000)
                       JSONObject(body).getJSONArray("stations")
                       f.writeText(body)
                   } catch (e: Exception) {
@@ -517,14 +591,14 @@ jobs:
           private fun fetchTides(station: String): List<TideEvent> {
               val begin = SimpleDateFormat("yyyyMMdd HH:mm", Locale.US)
               begin.timeZone = TimeZone.getTimeZone("UTC")
-              val start = Date(System.currentTimeMillis() - 3600L * 1000)
+              val start = Date(System.currentTimeMillis() - HOURS_BEHIND * HOUR)
               val body = httpGet(
                   "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter" +
                   "?product=predictions&application=TideWidget" +
                   "&begin_date=" + begin.format(start).replace(" ", "%20") +
-                  "&range=" + (HOURS_AHEAD + 1) +
+                  "&range=" + (HOURS_BEHIND + HOURS_AHEAD + 1) +
                   "&datum=MLLW&station=" + station + "&time_zone=gmt&units=english" +
-                  "&interval=hilo&format=json"
+                  "&interval=hilo&format=json", 30000
               )
               val json = JSONObject(body)
               if (!json.has("predictions")) {
@@ -569,17 +643,232 @@ jobs:
               }
           }
 
+          // ---------- Observations (water level, temps, wind) ----------
+
+          private fun parseGmt(t: String): Long {
+              val f = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+              f.timeZone = TimeZone.getTimeZone("UTC")
+              return try { f.parse(t)?.time ?: 0L } catch (e: Exception) { 0L }
+          }
+
+          private fun fetchLatest(product: String, station: String, timeoutMs: Int): JSONObject? {
+              val url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=" + product +
+                  "&application=TideWidget&date=latest&station=" + station +
+                  "&time_zone=gmt&units=english&format=json" +
+                  (if (product == "water_level") "&datum=MLLW" else "")
+              return try {
+                  val json = JSONObject(httpGet(url, timeoutMs))
+                  val arr = json.optJSONArray("data")
+                  if (arr == null || arr.length() == 0) null else arr.getJSONObject(arr.length() - 1)
+              } catch (e: Exception) {
+                  null
+              }
+          }
+
+          private fun obsFrom(product: String, o: JSONObject): JSONObject? {
+              val out = JSONObject()
+              out.put("t", parseGmt(o.optString("t", "")))
+              if (product == "wind") {
+                  val s = o.optString("s", "").toDoubleOrNull() ?: return null
+                  out.put("s", s)
+                  val g = o.optString("g", "").toDoubleOrNull()
+                  if (g != null) out.put("g", g)
+                  out.put("dr", o.optString("dr", ""))
+              } else {
+                  val v = o.optString("v", "").toDoubleOrNull() ?: return null
+                  out.put("v", v)
+              }
+              return out
+          }
+
+          private fun nearbyObsStations(context: Context, lat: Double, lng: Double): List<Station> {
+              val all = ArrayList<Station>()
+              try { all.addAll(loadStationFile(context, "waterlevels", "stations_wl.json")) } catch (e: Exception) { }
+              try { all.addAll(loadStationFile(context, "met", "stations_met.json")) } catch (e: Exception) { }
+              val seen = HashSet<String>()
+              val unique = ArrayList<Station>()
+              for (s in all) {
+                  if (seen.add(s.id)) unique.add(s)
+              }
+              return unique
+                  .filter { distKm(lat, lng, it.lat, it.lng) <= 120.0 }
+                  .sortedBy { distKm(lat, lng, it.lat, it.lng) }
+                  .take(8)
+          }
+
+          private fun obsLabel(product: String): String = when (product) {
+              "water_level" -> "Water level"
+              "water_temperature" -> "Water temp"
+              "air_temperature" -> "Air temp"
+              else -> "Wind"
+          }
+
+          private fun refreshObservations(context: Context, p: SharedPreferences, lat: Double, lng: Double, reset: Boolean): List<String> {
+              val obs = if (reset) {
+                  JSONObject()
+              } else {
+                  try { JSONObject(p.getString("obs", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+              }
+              var candidates: List<Station>? = null
+              val notes = ArrayList<String>()
+              val now = System.currentTimeMillis()
+
+              for (product in OBS_PRODUCTS) {
+                  val prev = obs.optJSONObject(product)
+                  var found: JSONObject? = null
+
+                  if (prev != null) {
+                      val raw = fetchLatest(product, prev.optString("id"), 8000)
+                      val o = if (raw != null) obsFrom(product, raw) else null
+                      if (o != null) {
+                          o.put("id", prev.optString("id"))
+                          o.put("st", prev.optString("st"))
+                          o.put("d", prev.optDouble("d"))
+                          found = o
+                      }
+                  }
+
+                  if (found == null && (reset || now - p.getLong("search_" + product, 0L) > 6 * HOUR)) {
+                      val list = candidates ?: nearbyObsStations(context, lat, lng)
+                      candidates = list
+                      p.edit().putLong("search_" + product, now).apply()
+                      for (s in list) {
+                          val raw = fetchLatest(product, s.id, 6000) ?: continue
+                          val o = obsFrom(product, raw) ?: continue
+                          o.put("id", s.id)
+                          o.put("st", s.name)
+                          o.put("d", distKm(lat, lng, s.lat, s.lng))
+                          found = o
+                          break
+                      }
+                  }
+
+                  val f = found
+                  if (f != null) {
+                      obs.put(product, f)
+                      notes.add(obsLabel(product) + ": " + f.optString("st") + " (" +
+                          String.format(Locale.US, "%.1f", f.optDouble("d") * 0.621371) + " mi)")
+                  } else {
+                      obs.remove(product)
+                      notes.add(obsLabel(product) + ": none found nearby")
+                  }
+              }
+              p.edit().putString("obs", obs.toString()).apply()
+              return notes
+          }
+
+          private fun recentObs(obs: JSONObject, key: String, nowMs: Long): JSONObject? {
+              val o = obs.optJSONObject(key) ?: return null
+              return if (nowMs - o.optLong("t") < OBS_MAX_AGE_MS) o else null
+          }
+
+          // ---------- Moon times (US Naval Observatory) ----------
+
+          private fun refreshMoon(p: SharedPreferences, lat: Double, lng: Double) {
+              val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+              if (p.getString("moon_date", "") == today) return
+              val nowMs = System.currentTimeMillis()
+              if (nowMs - p.getLong("moon_try", 0L) < 30L * 60 * 1000) return
+              p.edit().putLong("moon_try", nowMs).apply()
+
+              val offset = TimeZone.getDefault().getOffset(nowMs) / 3600000.0
+              val url = "https://aa.usno.navy.mil/api/rstt/oneday?date=" + today +
+                  "&coords=" + String.format(Locale.US, "%.4f,%.4f", lat, lng) +
+                  "&tz=" + String.format(Locale.US, "%.1f", offset) + "&dst=false"
+              val root = JSONObject(httpGet(url, 20000))
+              val data = root.optJSONObject("properties")?.optJSONObject("data") ?: root
+              val arr = data.optJSONArray("moondata") ?: throw RuntimeException("USNO: unexpected format")
+              var rise = ""
+              var set = ""
+              for (i in 0 until arr.length()) {
+                  val o = arr.getJSONObject(i)
+                  val ph = o.optString("phen", "")
+                  if (ph.equals("Rise", true)) rise = o.optString("time", "")
+                  if (ph.equals("Set", true)) set = o.optString("time", "")
+              }
+              p.edit().putString("moon_date", today).putString("moon_rise", rise).putString("moon_set", set).apply()
+          }
+
+          private fun to12(hhmm: String): String {
+              val parts = hhmm.split(":")
+              if (parts.size < 2) return "\u2014"
+              val h = parts[0].trim().toIntOrNull() ?: return "\u2014"
+              val m = parts[1].trim().take(2).toIntOrNull() ?: return "\u2014"
+              val suffix = if (h >= 12) "PM" else "AM"
+              val h12 = if (h % 12 == 0) 12 else h % 12
+              return h12.toString() + ":" + (if (m < 10) "0" else "") + m + " " + suffix
+          }
+
+          // ---------- Local astronomy (sun times, moon phase) ----------
+
+          private fun sunEvents(lat: Double, lng: Double): LongArray? {
+              val cal = Calendar.getInstance()
+              cal.set(Calendar.HOUR_OF_DAY, 12)
+              cal.set(Calendar.MINUTE, 0)
+              cal.set(Calendar.SECOND, 0)
+              cal.set(Calendar.MILLISECOND, 0)
+              val jd = cal.timeInMillis / 86400000.0 + 2440587.5
+              val n = Math.ceil(jd - 2451545.0 + 0.0008)
+              val lw = -lng
+              val jStar = n - lw / 360.0
+              val mDeg = (357.5291 + 0.98560028 * jStar) % 360.0
+              val m = Math.toRadians(mDeg)
+              val c = 1.9148 * Math.sin(m) + 0.02 * Math.sin(2 * m) + 0.0003 * Math.sin(3 * m)
+              val lam = Math.toRadians((mDeg + c + 180.0 + 102.9372) % 360.0)
+              val jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(m) - 0.0069 * Math.sin(2 * lam)
+              val sinDec = Math.sin(lam) * Math.sin(Math.toRadians(23.4397))
+              val dec = Math.asin(sinDec)
+              val phi = Math.toRadians(lat)
+              val cosW = (Math.sin(Math.toRadians(-0.833)) - Math.sin(phi) * sinDec) / (Math.cos(phi) * Math.cos(dec))
+              if (cosW < -1.0 || cosW > 1.0) return null
+              val w = Math.toDegrees(Math.acos(cosW))
+              val jRise = jTransit - w / 360.0
+              val jSet = jTransit + w / 360.0
+              return longArrayOf(
+                  ((jRise - 2440587.5) * 86400000.0).toLong(),
+                  ((jSet - 2440587.5) * 86400000.0).toLong()
+              )
+          }
+
+          private const val SYNODIC = 29.530588853
+
+          private fun moonAge(nowMs: Long): Double {
+              val ref = 947182440000L
+              val days = (nowMs - ref) / 86400000.0
+              var age = days % SYNODIC
+              if (age < 0) age += SYNODIC
+              return age
+          }
+
+          private fun moonPhaseName(age: Double): String = when {
+              age < 1.84 -> "New Moon"
+              age < 5.53 -> "Waxing Crescent"
+              age < 9.22 -> "First Quarter"
+              age < 12.91 -> "Waxing Gibbous"
+              age < 16.61 -> "Full Moon"
+              age < 20.30 -> "Waning Gibbous"
+              age < 23.99 -> "Last Quarter"
+              age < 27.68 -> "Waning Crescent"
+              else -> "New Moon"
+          }
+
+          private fun moonIllum(age: Double): Int =
+              Math.round((1 - Math.cos(2 * Math.PI * age / SYNODIC)) / 2 * 100).toInt()
+
+          // ---------- Refresh ----------
+
           private fun refreshTides(context: Context, force: Boolean) {
               val p = prefs(context)
               val hadStation = p.contains("id")
               val loc = getLocation(context, !hadStation || force)
+              var repicked = false
 
               if (loc != null) {
                   val needPick = !hadStation ||
                       distKm(loc.latitude, loc.longitude,
                           p.getFloat("clat", 0f).toDouble(), p.getFloat("clng", 0f).toDouble()) > 3.0
                   if (needPick) {
-                      val nearest = loadStations(context).minByOrNull {
+                      val nearest = loadStationFile(context, "tidepredictions", "stations.json").minByOrNull {
                           distKm(loc.latitude, loc.longitude, it.lat, it.lng)
                       }
                       if (nearest != null) {
@@ -591,6 +880,7 @@ jobs:
                               .putFloat("clat", loc.latitude.toFloat())
                               .putFloat("clng", loc.longitude.toFloat())
                               .apply()
+                          repicked = true
                       }
                   }
               }
@@ -620,7 +910,152 @@ jobs:
                   saveCache(context, events)
                   p.edit().putString("cacheId", id).apply()
               }
+
+              val refLat: Double
+              val refLng: Double
+              if (loc != null) {
+                  refLat = loc.latitude
+                  refLng = loc.longitude
+              } else if (p.contains("clat")) {
+                  refLat = p.getFloat("clat", 0f).toDouble()
+                  refLng = p.getFloat("clng", 0f).toDouble()
+              } else {
+                  refLat = p.getFloat("slat", 0f).toDouble()
+                  refLng = p.getFloat("slng", 0f).toDouble()
+              }
+
+              val detail = ArrayList<String>()
+              try {
+                  detail.addAll(refreshObservations(context, p, refLat, refLng, repicked))
+              } catch (e: Exception) {
+                  detail.add("Observations: " + shortErr(e))
+              }
+              try {
+                  refreshMoon(p, refLat, refLng)
+              } catch (e: Exception) {
+                  detail.add("Moon times: " + shortErr(e))
+              }
+              p.edit().putString("detail", detail.joinToString("\n")).apply()
               setStatus(context, "ok")
+          }
+
+          // ---------- Drawing ----------
+
+          private fun heightAt(events: List<TideEvent>, t: Long): Double? {
+              if (events.size < 2) return null
+              for (i in 0 until events.size - 1) {
+                  val a = events[i]
+                  val b = events[i + 1]
+                  if (t >= a.time.time && t <= b.time.time) {
+                      val span = (b.time.time - a.time.time).toDouble()
+                      if (span <= 0.0) return a.height
+                      val f = (t - a.time.time) / span
+                      return a.height + (b.height - a.height) * (1 - Math.cos(Math.PI * f)) / 2
+                  }
+              }
+              return null
+          }
+
+          private fun drawCurve(events: List<TideEvent>, nowMs: Long, w: Int, h: Int, dens: Float): Bitmap {
+              val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+              val c = Canvas(bmp)
+              val start = nowMs - 3 * HOUR
+              val end = nowMs + 21 * HOUR
+              val n = 96
+              val ts = LongArray(n + 1)
+              val vs = DoubleArray(n + 1)
+              val ok = BooleanArray(n + 1)
+              var mn = Double.MAX_VALUE
+              var mx = -Double.MAX_VALUE
+              for (i in 0..n) {
+                  ts[i] = start + (end - start) * i / n
+                  val hv = heightAt(events, ts[i])
+                  if (hv != null) {
+                      vs[i] = hv
+                      ok[i] = true
+                      if (hv < mn) mn = hv
+                      if (hv > mx) mx = hv
+                  }
+              }
+              if (mn > mx) return bmp
+              if (mx - mn < 0.5) {
+                  mx += 0.25
+                  mn -= 0.25
+              }
+              val hi = mx
+              val lo = mn
+              val padTop = 13f * dens
+              val padBot = 13f * dens
+              val plotH = h - padTop - padBot
+              val span = (end - start).toDouble()
+
+              val line = Path()
+              val fill = Path()
+              var open = false
+              var lastX = 0f
+              for (i in 0..n) {
+                  if (!ok[i]) continue
+                  val x = ((ts[i] - start) / span * w).toFloat()
+                  val y = (padTop + (hi - vs[i]) / (hi - lo) * plotH).toFloat()
+                  if (!open) {
+                      line.moveTo(x, y)
+                      fill.moveTo(x, h.toFloat())
+                      fill.lineTo(x, y)
+                      open = true
+                  } else {
+                      line.lineTo(x, y)
+                      fill.lineTo(x, y)
+                  }
+                  lastX = x
+              }
+              fill.lineTo(lastX, h.toFloat())
+              fill.close()
+
+              val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+              fillPaint.color = 0x334FC3F7
+              fillPaint.style = Paint.Style.FILL
+              c.drawPath(fill, fillPaint)
+
+              val linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+              linePaint.color = 0xFF4FC3F7.toInt()
+              linePaint.style = Paint.Style.STROKE
+              linePaint.strokeWidth = 2f * dens
+              c.drawPath(line, linePaint)
+
+              val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+              textPaint.color = 0xFFB0BEC5.toInt()
+              textPaint.textSize = 9f * dens
+              val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+              dotPaint.color = 0xFF4FC3F7.toInt()
+              for (e in events) {
+                  val t = e.time.time
+                  if (t < start || t > end) continue
+                  val x = ((t - start) / span * w).toFloat()
+                  val y = (padTop + (hi - e.height) / (hi - lo) * plotH).toFloat()
+                  c.drawCircle(x, y, 2.5f * dens, dotPaint)
+                  textPaint.textAlign = when {
+                      x < 16f * dens -> Paint.Align.LEFT
+                      x > w - 16f * dens -> Paint.Align.RIGHT
+                      else -> Paint.Align.CENTER
+                  }
+                  val label = String.format(Locale.US, "%.1f", e.height)
+                  val ty = if (e.isHigh) y - 4f * dens else y + 11f * dens
+                  c.drawText(label, x, ty, textPaint)
+              }
+
+              val nowX = ((nowMs - start) / span * w).toFloat()
+              val nowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+              nowPaint.color = 0xCCFFFFFF.toInt()
+              nowPaint.strokeWidth = 1.5f * dens
+              c.drawLine(nowX, padTop - 4f * dens, nowX, h.toFloat(), nowPaint)
+              val nowH = heightAt(events, nowMs)
+              if (nowH != null) {
+                  val ny = (padTop + (hi - nowH) / (hi - lo) * plotH).toFloat()
+                  val markPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+                  markPaint.color = 0xFFFFB74D.toInt()
+                  c.drawCircle(nowX, ny, 4f * dens, markPaint)
+              }
+              return bmp
           }
 
           private fun fmt(d: Date, now: Date): String {
@@ -631,7 +1066,21 @@ jobs:
 
           private fun ft(x: Double): String = String.format(Locale.US, "%.1f ft", x)
 
-          private fun buildViews(context: Context): RemoteViews {
+          private fun countdown(ms: Long): String {
+              val mins = Math.max(0L, ms / 60000L)
+              return if (mins >= 60) (mins / 60).toString() + "h " + (mins % 60) + "m" else mins.toString() + "m"
+          }
+
+          private fun clearAll(v: RemoteViews) {
+              val ids = intArrayOf(
+                  R.id.countdown, R.id.lbl1, R.id.time1, R.id.ht1, R.id.lbl2, R.id.time2, R.id.ht2,
+                  R.id.now, R.id.range, R.id.sun1, R.id.sun2, R.id.moon1, R.id.moon2,
+                  R.id.phase, R.id.cond
+              )
+              for (i in ids) v.setTextViewText(i, "")
+          }
+
+          private fun buildViews(context: Context, mgr: AppWidgetManager, widgetId: Int): RemoteViews {
               val v = RemoteViews(context.packageName, R.layout.widget)
               val tap = Intent(context, TideWidget::class.java)
               tap.action = ACTION_REFRESH
@@ -643,22 +1092,19 @@ jobs:
               val p = prefs(context)
               val status = p.getString("status", "ok") ?: "ok"
               val cache = readCache(context)
-              val now = Date()
-              val upcoming = cache?.events?.filter { it.time.after(now) } ?: emptyList()
+              val nowMs = System.currentTimeMillis()
+              val now = Date(nowMs)
+              val all = cache?.events ?: emptyList()
+              val upcoming = all.filter { it.time.after(now) }
               val first = upcoming.getOrNull(0)
               val second = upcoming.getOrNull(1)
 
               v.setTextViewText(R.id.station, p.getString("label", "") ?: "")
 
               if (first == null || second == null) {
+                  clearAll(v)
                   v.setTextViewText(R.id.status, "Loading tides")
-                  v.setTextViewText(R.id.lbl1, "")
                   v.setTextViewText(R.id.time1, if (status == "ok") "Fetching data..." else status)
-                  v.setTextViewText(R.id.ht1, "")
-                  v.setTextViewText(R.id.lbl2, "")
-                  v.setTextViewText(R.id.time2, "")
-                  v.setTextViewText(R.id.ht2, "")
-                  v.setTextViewText(R.id.range, "")
                   v.setTextViewText(R.id.updated, "Tap to retry")
                   return v
               }
@@ -670,19 +1116,94 @@ jobs:
                   v.setTextViewText(R.id.status, "\u25BC FALLING")
                   v.setTextColor(R.id.status, 0xFFFFB74D.toInt())
               }
+              v.setTextViewText(
+                  R.id.countdown,
+                  (if (first.isHigh) "High" else "Low") + " in " + countdown(first.time.time - nowMs)
+              )
 
               v.setTextViewText(R.id.lbl1, if (first.isHigh) "NEXT HIGH" else "NEXT LOW")
               v.setTextViewText(R.id.time1, fmt(first.time, now))
               v.setTextViewText(R.id.ht1, ft(first.height))
-
               v.setTextViewText(R.id.lbl2, if (second.isHigh) "THEN HIGH" else "THEN LOW")
               v.setTextViewText(R.id.time2, fmt(second.time, now))
               v.setTextViewText(R.id.ht2, ft(second.height))
+              v.setTextViewText(R.id.range, "Range " + ft(Math.abs(first.height - second.height)))
 
-              v.setTextViewText(R.id.range, ft(Math.abs(first.height - second.height)))
-              val pulled = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(cache?.fetchedAt ?: 0L))
+              // Observations
+              val obs = try { JSONObject(p.getString("obs", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+              val predNow = heightAt(all, nowMs)
+              val wl = recentObs(obs, "water_level", nowMs)
+              val nowText: String
+              if (wl != null) {
+                  val ov = wl.optDouble("v")
+                  if (predNow != null && wl.optString("id") == (p.getString("id", "") ?: "")) {
+                      nowText = "Now " + ft(ov) + String.format(Locale.US, " (%+.1f ft vs predicted)", ov - predNow)
+                  } else {
+                      nowText = "Now " + ft(ov) + " observed"
+                  }
+              } else if (predNow != null) {
+                  nowText = "Now ~" + ft(predNow) + " (predicted)"
+              } else {
+                  nowText = ""
+              }
+              v.setTextViewText(R.id.now, nowText)
+
+              val parts = ArrayList<String>()
+              val wt = recentObs(obs, "water_temperature", nowMs)
+              if (wt != null) parts.add("Water " + Math.round(wt.optDouble("v")) + "\u00B0F")
+              val at = recentObs(obs, "air_temperature", nowMs)
+              if (at != null) parts.add("Air " + Math.round(at.optDouble("v")) + "\u00B0F")
+              val wd = recentObs(obs, "wind", nowMs)
+              if (wd != null) {
+                  var w = "Wind " + wd.optString("dr", "") + " " + Math.round(wd.optDouble("s")) + " kt"
+                  if (wd.has("g")) w += " (g " + Math.round(wd.optDouble("g")) + ")"
+                  parts.add(w)
+              }
+              v.setTextViewText(R.id.cond, if (parts.isEmpty()) "No water or wind sensors nearby" else parts.joinToString("  \u00B7  "))
+
+              // Sun, moon
+              val lat: Double
+              val lng: Double
+              if (p.contains("clat")) {
+                  lat = p.getFloat("clat", 0f).toDouble()
+                  lng = p.getFloat("clng", 0f).toDouble()
+              } else {
+                  lat = p.getFloat("slat", 0f).toDouble()
+                  lng = p.getFloat("slng", 0f).toDouble()
+              }
+              val timeFmt = SimpleDateFormat("h:mm a", Locale.getDefault())
+              val sun = sunEvents(lat, lng)
+              val riseText = if (sun != null) timeFmt.format(Date(sun[0])) else "\u2014"
+              val setText = if (sun != null) timeFmt.format(Date(sun[1])) else "\u2014"
+              v.setTextViewText(R.id.sun1, "\u2600 Rise  " + riseText)
+              v.setTextViewText(R.id.sun2, "\u2600 Set   " + setText)
+
+              val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+              val moonOk = p.getString("moon_date", "") == today
+              val mRise = if (moonOk) to12(p.getString("moon_rise", "") ?: "") else "\u2014"
+              val mSet = if (moonOk) to12(p.getString("moon_set", "") ?: "") else "\u2014"
+              val moon = "\uD83C\uDF19"
+              v.setTextViewText(R.id.moon1, moon + " Rise  " + mRise)
+              v.setTextViewText(R.id.moon2, moon + " Set   " + mSet)
+
+              val age = moonAge(nowMs)
+              v.setTextViewText(R.id.phase, moonPhaseName(age) + " \u00B7 " + moonIllum(age) + "% lit")
+
+              // Tide curve
+              val opts = mgr.getAppWidgetOptions(widgetId)
+              val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 300)
+              val dens = context.resources.displayMetrics.density
+              val wDp = Math.max(160, minW - 24)
+              val wPx = Math.min(1400, (wDp * dens).toInt())
+              val hPx = (52 * dens).toInt()
+              v.setImageViewBitmap(R.id.curve, drawCurve(all, nowMs, wPx, hPx, dens))
+
+              val okAt = p.getLong("okAt", 0L)
+              val fetched = cache?.fetchedAt ?: 0L
+              val shown = if (okAt > 0L) okAt else fetched
+              val pulled = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(shown))
               val suffix = if (status == "ok") " \u00B7 tap to refresh" else " \u00B7 retrying"
-              v.setTextViewText(R.id.updated, "Data from $pulled$suffix")
+              v.setTextViewText(R.id.updated, "Updated " + pulled + suffix)
               return v
           }
           EOF
