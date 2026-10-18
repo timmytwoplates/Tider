@@ -21,6 +21,8 @@ jobs:
         run: |
           mkdir -p app/src/main/java/com/example/tidewidget app/src/main/res/layout app/src/main/res/xml app/src/main/res/drawable
 
+          printf 'android.useAndroidX=true\norg.gradle.jvmargs=-Xmx2048m\n' > gradle.properties
+
           cat > settings.gradle.kts <<'EOF'
           pluginManagement {
               repositories { google(); mavenCentral(); gradlePluginPortal() }
@@ -56,6 +58,9 @@ jobs:
                   targetCompatibility = JavaVersion.VERSION_17
               }
               kotlinOptions { jvmTarget = "17" }
+          }
+          dependencies {
+              implementation("androidx.work:work-runtime:2.9.1")
           }
           EOF
 
@@ -168,19 +173,24 @@ jobs:
 
           import android.Manifest
           import android.app.Activity
-          import android.appwidget.AppWidgetManager
-          import android.content.ComponentName
-          import android.content.Intent
           import android.content.pm.PackageManager
           import android.os.Build
           import android.os.Bundle
+          import android.os.Handler
+          import android.os.Looper
           import android.widget.Button
           import android.widget.LinearLayout
           import android.widget.TextView
+          import java.text.SimpleDateFormat
+          import java.util.Date
+          import java.util.Locale
 
           class MainActivity : Activity() {
               private lateinit var info: TextView
               private lateinit var button: Button
+              private lateinit var statusView: TextView
+              private lateinit var refreshButton: Button
+              private val handler = Handler(Looper.getMainLooper())
 
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
@@ -192,15 +202,33 @@ jobs:
                   info.textSize = 16f
                   button = Button(this)
                   button.setOnClickListener { askNext() }
+                  statusView = TextView(this)
+                  statusView.textSize = 14f
+                  statusView.setPadding(0, pad, 0, pad / 2)
+                  refreshButton = Button(this)
+                  refreshButton.text = "Refresh tides now"
+                  refreshButton.setOnClickListener {
+                      refreshNow(this, true, true)
+                      statusView.text = "Refreshing..."
+                      handler.postDelayed({ showStatus() }, 4000)
+                      handler.postDelayed({ showStatus() }, 12000)
+                      handler.postDelayed({ showStatus() }, 30000)
+                  }
                   root.addView(info)
                   root.addView(button)
+                  root.addView(statusView)
+                  root.addView(refreshButton)
                   setContentView(root)
               }
 
               override fun onResume() {
                   super.onResume()
-                  refresh()
-                  if (has(Manifest.permission.ACCESS_FINE_LOCATION)) updateWidgets()
+                  refreshPermissionText()
+                  showStatus()
+                  schedulePeriodic(this)
+                  if (has(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                      refreshNow(this, false, false)
+                  }
               }
 
               private fun has(p: String): Boolean =
@@ -224,35 +252,40 @@ jobs:
 
               override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) {
                   super.onRequestPermissionsResult(code, perms, results)
-                  refresh()
-                  if (has(Manifest.permission.ACCESS_FINE_LOCATION)) updateWidgets()
+                  refreshPermissionText()
+                  if (has(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                      refreshNow(this, true, true)
+                      handler.postDelayed({ showStatus() }, 5000)
+                  }
               }
 
-              private fun refresh() {
+              private fun refreshPermissionText() {
                   if (!has(Manifest.permission.ACCESS_FINE_LOCATION)) {
                       info.text = "Step 1 of 2: allow precise location so the widget can find your nearest NOAA tide station."
                       button.text = "Allow location"
                       button.isEnabled = true
                   } else if (needsBackground()) {
-                      info.text = "Step 2 of 2: so the widget can update from the home screen, choose Location, then Allow all the time."
+                      info.text = "Step 2 of 2: so the widget can keep updating, choose Location, then Allow all the time."
                       button.text = "Allow all the time"
                       button.isEnabled = true
                   } else {
-                      info.text = "All set. Add the Tide Widget from your home screen widget list. Tap the widget to refresh it."
+                      info.text = "Location is set. Add the Tide Widget from your home screen widget list. Tap the widget to refresh it."
                       button.text = "Done"
                       button.isEnabled = false
                   }
               }
 
-              private fun updateWidgets() {
-                  val mgr = AppWidgetManager.getInstance(this)
-                  val ids = mgr.getAppWidgetIds(ComponentName(this, TideWidget::class.java))
-                  if (ids.isNotEmpty()) {
-                      val i = Intent(this, TideWidget::class.java)
-                      i.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                      i.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                      sendBroadcast(i)
+              private fun showStatus() {
+                  val p = getSharedPreferences("tide", MODE_PRIVATE)
+                  val st = p.getString("status", "not run yet")
+                  val label = p.getString("label", "none yet")
+                  val at = p.getLong("statusAt", 0L)
+                  val whenText = if (at > 0L) {
+                      SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(at))
+                  } else {
+                      "-"
                   }
+                  statusView.text = "Station: $label\nLast run ($whenText): $st"
               }
           }
           EOF
@@ -265,8 +298,10 @@ jobs:
           import android.app.PendingIntent
           import android.appwidget.AppWidgetManager
           import android.appwidget.AppWidgetProvider
+          import android.content.ComponentName
           import android.content.Context
           import android.content.Intent
+          import android.content.SharedPreferences
           import android.content.pm.PackageManager
           import android.location.Location
           import android.location.LocationListener
@@ -274,43 +309,118 @@ jobs:
           import android.os.Bundle
           import android.os.Looper
           import android.widget.RemoteViews
+          import androidx.work.Constraints
+          import androidx.work.Data
+          import androidx.work.ExistingPeriodicWorkPolicy
+          import androidx.work.ExistingWorkPolicy
+          import androidx.work.NetworkType
+          import androidx.work.OneTimeWorkRequest
+          import androidx.work.PeriodicWorkRequest
+          import androidx.work.WorkManager
+          import androidx.work.Worker
+          import androidx.work.WorkerParameters
+          import org.json.JSONArray
           import org.json.JSONObject
           import java.io.File
           import java.net.HttpURLConnection
           import java.net.URL
           import java.text.SimpleDateFormat
-          import java.util.Calendar
           import java.util.Date
           import java.util.Locale
           import java.util.TimeZone
           import java.util.concurrent.CountDownLatch
           import java.util.concurrent.TimeUnit
-          import kotlin.concurrent.thread
+
+          // How many hours of tide data to pull each time.
+          private const val HOURS_AHEAD = 24
+          private const val ACTION_REFRESH = "com.example.tidewidget.REFRESH"
+          private const val STALE_MS = 30L * 60 * 1000
+          private const val REFETCH_MS = 3L * 3600 * 1000
 
           data class TideEvent(val time: Date, val height: Double, val isHigh: Boolean)
           data class Station(val id: String, val name: String, val lat: Double, val lng: Double)
-          data class Loaded(val events: List<TideEvent>?, val label: String, val note: String?)
-
-          private const val STALE_MS = 30L * 60 * 1000
+          data class Cache(val fetchedAt: Long, val events: List<TideEvent>)
 
           class TideWidget : AppWidgetProvider() {
+              override fun onEnabled(context: Context) {
+                  schedulePeriodic(context)
+                  refreshNow(context, true, false)
+              }
+
               override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-                  val pending = goAsync()
-                  thread {
-                      try {
-                          val result = try { compute(context) } catch (e: Exception) { Loaded(null, "", null) }
-                          manager.updateAppWidget(ids, buildViews(context, result, ids))
-                      } finally {
-                          pending.finish()
-                      }
+                  manager.updateAppWidget(ids, buildViews(context))
+                  schedulePeriodic(context)
+                  refreshNow(context, false, false)
+              }
+
+              override fun onReceive(context: Context, intent: Intent) {
+                  if (intent.action == ACTION_REFRESH) {
+                      updateAllWidgets(context)
+                      refreshNow(context, true, true)
+                  } else {
+                      super.onReceive(context, intent)
+                  }
+              }
+
+              override fun onDisabled(context: Context) {
+                  WorkManager.getInstance(context).cancelUniqueWork("tide-periodic")
+              }
+          }
+
+          class TideWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
+              override fun doWork(): Result {
+                  val force = inputData.getBoolean("force", false)
+                  val c = applicationContext
+                  return try {
+                      refreshTides(c, force)
+                      updateAllWidgets(c)
+                      Result.success()
+                  } catch (e: Exception) {
+                      val msg = (e.javaClass.simpleName + ": " + (e.message ?: "")).take(90)
+                      setStatus(c, msg)
+                      updateAllWidgets(c)
+                      if (runAttemptCount < 4) Result.retry() else Result.success()
                   }
               }
           }
 
+          fun schedulePeriodic(context: Context) {
+              val net = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+              val req = PeriodicWorkRequest.Builder(TideWorker::class.java, 15, TimeUnit.MINUTES)
+                  .setConstraints(net)
+                  .build()
+              WorkManager.getInstance(context)
+                  .enqueueUniquePeriodicWork("tide-periodic", ExistingPeriodicWorkPolicy.KEEP, req)
+          }
+
+          fun refreshNow(context: Context, force: Boolean, replace: Boolean) {
+              val net = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+              val data = Data.Builder().putBoolean("force", force).build()
+              val req = OneTimeWorkRequest.Builder(TideWorker::class.java)
+                  .setConstraints(net)
+                  .setInputData(data)
+                  .build()
+              val policy = if (replace) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
+              WorkManager.getInstance(context).enqueueUniqueWork("tide-now", policy, req)
+          }
+
+          fun updateAllWidgets(context: Context) {
+              val mgr = AppWidgetManager.getInstance(context)
+              val ids = mgr.getAppWidgetIds(ComponentName(context, TideWidget::class.java))
+              if (ids.isNotEmpty()) mgr.updateAppWidget(ids, buildViews(context))
+          }
+
+          private fun prefs(c: Context): SharedPreferences =
+              c.getSharedPreferences("tide", Context.MODE_PRIVATE)
+
+          private fun setStatus(c: Context, msg: String) {
+              prefs(c).edit().putString("status", msg).putLong("statusAt", System.currentTimeMillis()).apply()
+          }
+
           private fun httpGet(address: String): String {
               val conn = URL(address).openConnection() as HttpURLConnection
-              conn.connectTimeout = 10000
-              conn.readTimeout = 15000
+              conn.connectTimeout = 15000
+              conn.readTimeout = 30000
               try {
                   return conn.inputStream.bufferedReader().readText()
               } finally {
@@ -329,7 +439,7 @@ jobs:
           }
 
           @SuppressLint("MissingPermission")
-          private fun getLocation(context: Context): Location? {
+          private fun getLocation(context: Context, live: Boolean): Location? {
               val fine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
               val coarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
               if (!fine && !coarse) return null
@@ -351,13 +461,11 @@ jobs:
               }
 
               val current = best
-              if (fine && (current == null || now - current.time > STALE_MS)) {
-                  val provider = when {
-                      lm.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-                      lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-                      else -> null
-                  }
-                  if (provider != null) {
+              if (live && fine && (current == null || now - current.time > STALE_MS)) {
+                  val providers = ArrayList<String>()
+                  if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) providers.add(LocationManager.GPS_PROVIDER)
+                  if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) providers.add(LocationManager.NETWORK_PROVIDER)
+                  for (provider in providers) {
                       val latch = CountDownLatch(1)
                       val holder = arrayOfNulls<Location>(1)
                       val listener = object : LocationListener {
@@ -371,11 +479,14 @@ jobs:
                       }
                       try {
                           lm.requestSingleUpdate(provider, listener, Looper.getMainLooper())
-                          latch.await(5, TimeUnit.SECONDS)
+                          latch.await(15, TimeUnit.SECONDS)
                       } catch (e: Exception) { }
                       try { lm.removeUpdates(listener) } catch (e: Exception) { }
                       val fix = holder[0]
-                      if (fix != null) best = fix
+                      if (fix != null) {
+                          best = fix
+                          break
+                      }
                   }
               }
               return best
@@ -403,59 +514,24 @@ jobs:
               return out
           }
 
-          private fun compute(context: Context): Loaded {
-              val prefs = context.getSharedPreferences("tide", Context.MODE_PRIVATE)
-              val loc = getLocation(context)
-              var note: String? = null
-
-              if (loc != null) {
-                  val needPick = !prefs.contains("id") ||
-                      distKm(loc.latitude, loc.longitude,
-                          prefs.getFloat("clat", 0f).toDouble(), prefs.getFloat("clng", 0f).toDouble()) > 3.0
-                  if (needPick) {
-                      val nearest = loadStations(context).minByOrNull {
-                          distKm(loc.latitude, loc.longitude, it.lat, it.lng)
-                      }
-                      if (nearest != null) {
-                          prefs.edit()
-                              .putString("id", nearest.id)
-                              .putString("name", nearest.name)
-                              .putFloat("slat", nearest.lat.toFloat())
-                              .putFloat("slng", nearest.lng.toFloat())
-                              .putFloat("clat", loc.latitude.toFloat())
-                              .putFloat("clng", loc.longitude.toFloat())
-                              .apply()
-                      }
-                  }
-              } else if (!prefs.contains("id")) {
-                  note = "Open the app to enable location"
-              }
-
-              val id = prefs.getString("id", null) ?: return Loaded(null, "", note ?: "No station found")
-              val name = prefs.getString("name", "Station") ?: "Station"
-              var label = name
-              if (loc != null) {
-                  val km = distKm(loc.latitude, loc.longitude,
-                      prefs.getFloat("slat", 0f).toDouble(), prefs.getFloat("slng", 0f).toDouble())
-                  label = name + " \u00B7 " + String.format(Locale.US, "%.1f mi", km * 0.621371)
-              }
-              val events = try { fetchTides(id) } catch (e: Exception) { null }
-              return Loaded(events, label, note)
-          }
-
           private fun fetchTides(station: String): List<TideEvent> {
-              val day = SimpleDateFormat("yyyyMMdd", Locale.US)
-              day.timeZone = TimeZone.getTimeZone("UTC")
-              val start = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }.time
-              val end = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 3) }.time
+              val begin = SimpleDateFormat("yyyyMMdd HH:mm", Locale.US)
+              begin.timeZone = TimeZone.getTimeZone("UTC")
+              val start = Date(System.currentTimeMillis() - 3600L * 1000)
               val body = httpGet(
                   "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter" +
                   "?product=predictions&application=TideWidget" +
-                  "&begin_date=${day.format(start)}&end_date=${day.format(end)}" +
-                  "&datum=MLLW&station=$station&time_zone=gmt&units=english" +
+                  "&begin_date=" + begin.format(start).replace(" ", "%20") +
+                  "&range=" + (HOURS_AHEAD + 1) +
+                  "&datum=MLLW&station=" + station + "&time_zone=gmt&units=english" +
                   "&interval=hilo&format=json"
               )
-              val arr = JSONObject(body).getJSONArray("predictions")
+              val json = JSONObject(body)
+              if (!json.has("predictions")) {
+                  val err = json.optJSONObject("error")?.optString("message") ?: "NOAA returned no predictions"
+                  throw RuntimeException(err.take(70))
+              }
+              val arr = json.getJSONArray("predictions")
               val parse = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
               parse.timeZone = TimeZone.getTimeZone("UTC")
               val out = ArrayList<TideEvent>()
@@ -467,6 +543,86 @@ jobs:
               return out.sortedBy { it.time }
           }
 
+          private fun saveCache(c: Context, events: List<TideEvent>) {
+              val arr = JSONArray()
+              for (e in events) {
+                  arr.put(JSONObject().put("t", e.time.time).put("h", e.height).put("hi", e.isHigh))
+              }
+              val o = JSONObject().put("fetchedAt", System.currentTimeMillis()).put("events", arr)
+              File(c.filesDir, "tides.json").writeText(o.toString())
+          }
+
+          private fun readCache(c: Context): Cache? {
+              val f = File(c.filesDir, "tides.json")
+              if (!f.exists()) return null
+              return try {
+                  val o = JSONObject(f.readText())
+                  val arr = o.getJSONArray("events")
+                  val ev = ArrayList<TideEvent>()
+                  for (i in 0 until arr.length()) {
+                      val e = arr.getJSONObject(i)
+                      ev.add(TideEvent(Date(e.getLong("t")), e.getDouble("h"), e.getBoolean("hi")))
+                  }
+                  Cache(o.getLong("fetchedAt"), ev)
+              } catch (e: Exception) {
+                  null
+              }
+          }
+
+          private fun refreshTides(context: Context, force: Boolean) {
+              val p = prefs(context)
+              val hadStation = p.contains("id")
+              val loc = getLocation(context, !hadStation || force)
+
+              if (loc != null) {
+                  val needPick = !hadStation ||
+                      distKm(loc.latitude, loc.longitude,
+                          p.getFloat("clat", 0f).toDouble(), p.getFloat("clng", 0f).toDouble()) > 3.0
+                  if (needPick) {
+                      val nearest = loadStations(context).minByOrNull {
+                          distKm(loc.latitude, loc.longitude, it.lat, it.lng)
+                      }
+                      if (nearest != null) {
+                          p.edit()
+                              .putString("id", nearest.id)
+                              .putString("name", nearest.name)
+                              .putFloat("slat", nearest.lat.toFloat())
+                              .putFloat("slng", nearest.lng.toFloat())
+                              .putFloat("clat", loc.latitude.toFloat())
+                              .putFloat("clng", loc.longitude.toFloat())
+                              .apply()
+                      }
+                  }
+              }
+
+              val id = p.getString("id", null)
+              if (id == null) {
+                  setStatus(context, "No location yet. Open the app and allow location.")
+                  return
+              }
+
+              val name = p.getString("name", "Station") ?: "Station"
+              var label = name
+              if (loc != null) {
+                  val km = distKm(loc.latitude, loc.longitude,
+                      p.getFloat("slat", 0f).toDouble(), p.getFloat("slng", 0f).toDouble())
+                  label = name + " \u00B7 " + String.format(Locale.US, "%.1f mi", km * 0.621371)
+              }
+              p.edit().putString("label", label).apply()
+
+              val cache = readCache(context)
+              val sameStation = p.getString("cacheId", null) == id
+              val needFetch = cache == null || !sameStation || force ||
+                  System.currentTimeMillis() - cache.fetchedAt > REFETCH_MS ||
+                  cache.events.count { it.time.after(Date()) } < 4
+              if (needFetch) {
+                  val events = fetchTides(id)
+                  saveCache(context, events)
+                  p.edit().putString("cacheId", id).apply()
+              }
+              setStatus(context, "ok")
+          }
+
           private fun fmt(d: Date, now: Date): String {
               val dayFmt = SimpleDateFormat("yyyyMMdd", Locale.US)
               val sameDay = dayFmt.format(d) == dayFmt.format(now)
@@ -475,28 +631,29 @@ jobs:
 
           private fun ft(x: Double): String = String.format(Locale.US, "%.1f ft", x)
 
-          private fun buildViews(context: Context, r: Loaded, ids: IntArray): RemoteViews {
+          private fun buildViews(context: Context): RemoteViews {
               val v = RemoteViews(context.packageName, R.layout.widget)
-              val tap = Intent(context, TideWidget::class.java).apply {
-                  action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                  putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-              }
+              val tap = Intent(context, TideWidget::class.java)
+              tap.action = ACTION_REFRESH
               v.setOnClickPendingIntent(
                   R.id.root,
                   PendingIntent.getBroadcast(context, 0, tap, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
               )
 
+              val p = prefs(context)
+              val status = p.getString("status", "ok") ?: "ok"
+              val cache = readCache(context)
               val now = Date()
-              val upcoming = r.events?.filter { it.time.after(now) } ?: emptyList()
+              val upcoming = cache?.events?.filter { it.time.after(now) } ?: emptyList()
               val first = upcoming.getOrNull(0)
               val second = upcoming.getOrNull(1)
 
-              v.setTextViewText(R.id.station, r.label)
+              v.setTextViewText(R.id.station, p.getString("label", "") ?: "")
 
               if (first == null || second == null) {
-                  v.setTextViewText(R.id.status, "No tide data")
+                  v.setTextViewText(R.id.status, "Loading tides")
                   v.setTextViewText(R.id.lbl1, "")
-                  v.setTextViewText(R.id.time1, r.note ?: "Check connection")
+                  v.setTextViewText(R.id.time1, if (status == "ok") "Fetching data..." else status)
                   v.setTextViewText(R.id.ht1, "")
                   v.setTextViewText(R.id.lbl2, "")
                   v.setTextViewText(R.id.time2, "")
@@ -523,10 +680,10 @@ jobs:
               v.setTextViewText(R.id.ht2, ft(second.height))
 
               v.setTextViewText(R.id.range, ft(Math.abs(first.height - second.height)))
-              v.setTextViewText(
-                  R.id.updated,
-                  "Updated ${SimpleDateFormat("h:mm a", Locale.getDefault()).format(now)} \u00B7 tap to refresh"
-              )
+
+              val pulled = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(cache.fetchedAt))
+              val suffix = if (status == "ok") " \u00B7 tap to refresh" else " \u00B7 retrying"
+              v.setTextViewText(R.id.updated, "Data from $pulled$suffix")
               return v
           }
           EOF
