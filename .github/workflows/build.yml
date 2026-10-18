@@ -680,8 +680,7 @@ jobs:
               v.setTextViewText(R.id.ht2, ft(second.height))
 
               v.setTextViewText(R.id.range, ft(Math.abs(first.height - second.height)))
-
-              val pulled = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(cache.fetchedAt))
+              val pulled = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(cache?.fetchedAt ?: 0L))
               val suffix = if (status == "ok") " \u00B7 tap to refresh" else " \u00B7 retrying"
               v.setTextViewText(R.id.updated, "Data from $pulled$suffix")
               return v
