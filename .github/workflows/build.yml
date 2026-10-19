@@ -70,6 +70,7 @@ jobs:
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
               <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+              <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
               <application android:label="Tide Widget">
                   <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
@@ -92,9 +93,9 @@ jobs:
           cat > app/src/main/res/xml/tide_widget_info.xml <<'EOF'
           <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
               android:minWidth="250dp"
-              android:minHeight="180dp"
+              android:minHeight="250dp"
               android:targetCellWidth="4"
-              android:targetCellHeight="3"
+              android:targetCellHeight="4"
               android:updatePeriodMillis="1800000"
               android:initialLayout="@layout/widget"
               android:resizeMode="horizontal|vertical"
@@ -103,7 +104,7 @@ jobs:
 
           cat > app/src/main/res/drawable/bg.xml <<'EOF'
           <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <solid android:color="#E6102030" />
+              <solid android:color="#F20B1622" />
               <corners android:radius="20dp" />
           </shape>
           EOF
@@ -121,96 +122,101 @@ jobs:
                   android:orientation="horizontal">
                   <TextView android:id="@+id/status"
                       android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                      android:textSize="20sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                      android:maxLines="1"
+                      android:textSize="26sp" android:textStyle="bold" android:textColor="#FFFFFF" />
                   <TextView android:id="@+id/countdown"
                       android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:textSize="13sp" android:textStyle="bold" android:textColor="#FFD54F" />
+                      android:maxLines="1"
+                      android:textSize="17sp" android:textStyle="bold" android:textColor="#FFE082" />
               </LinearLayout>
 
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal" android:layout_marginTop="4dp">
+                  android:orientation="horizontal" android:layout_marginTop="6dp">
                   <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                       android:layout_weight="1" android:orientation="vertical">
                       <TextView android:id="@+id/lbl1"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="10sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
+                          android:textSize="12sp" android:textStyle="bold" android:letterSpacing="0.08" android:textColor="#CFD8DC" />
                       <TextView android:id="@+id/time1"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="15sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                          android:maxLines="1"
+                          android:textSize="22sp" android:textStyle="bold" android:textColor="#FFFFFF" />
                       <TextView android:id="@+id/ht1"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="13sp" android:textColor="#FFFFFF" />
+                          android:textSize="18sp" android:textColor="#FFFFFF" />
                   </LinearLayout>
                   <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                       android:layout_weight="1" android:orientation="vertical">
                       <TextView android:id="@+id/lbl2"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="10sp" android:letterSpacing="0.1" android:textColor="#90A4AE" />
+                          android:textSize="12sp" android:textStyle="bold" android:letterSpacing="0.08" android:textColor="#CFD8DC" />
                       <TextView android:id="@+id/time2"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="15sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                          android:maxLines="1"
+                          android:textSize="22sp" android:textStyle="bold" android:textColor="#FFFFFF" />
                       <TextView android:id="@+id/ht2"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="13sp" android:textColor="#FFFFFF" />
+                          android:textSize="18sp" android:textColor="#FFFFFF" />
                   </LinearLayout>
               </LinearLayout>
 
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal" android:layout_marginTop="4dp">
+                  android:orientation="horizontal" android:layout_marginTop="6dp">
                   <TextView android:id="@+id/now"
                       android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                       android:maxLines="1" android:ellipsize="end"
-                      android:textSize="12sp" android:textColor="#FFFFFF" />
+                      android:textSize="16sp" android:textStyle="bold" android:textColor="#FFFFFF" />
                   <TextView android:id="@+id/range"
                       android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:textSize="12sp" android:textStyle="bold" android:textColor="#B0BEC5" />
+                      android:maxLines="1"
+                      android:textSize="16sp" android:textStyle="bold" android:textColor="#80DEEA" />
               </LinearLayout>
 
               <ImageView android:id="@+id/curve"
-                  android:layout_width="match_parent" android:layout_height="52dp"
-                  android:layout_marginTop="4dp"
+                  android:layout_width="match_parent" android:layout_height="100dp"
+                  android:layout_marginTop="6dp"
                   android:scaleType="fitXY" />
 
               <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal" android:layout_marginTop="4dp">
+                  android:orientation="horizontal" android:layout_marginTop="6dp">
                   <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                       android:layout_weight="1" android:orientation="vertical">
                       <TextView android:id="@+id/sun1"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                          android:maxLines="1" android:textSize="15sp" android:textColor="#FFFFFF" />
                       <TextView android:id="@+id/sun2"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                          android:maxLines="1" android:textSize="15sp" android:textColor="#FFFFFF" />
                   </LinearLayout>
                   <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                       android:layout_weight="1" android:orientation="vertical">
                       <TextView android:id="@+id/moon1"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                          android:maxLines="1" android:textSize="15sp" android:textColor="#FFFFFF" />
                       <TextView android:id="@+id/moon2"
                           android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="12sp" android:textColor="#FFFFFF" />
+                          android:maxLines="1" android:textSize="15sp" android:textColor="#FFFFFF" />
                   </LinearLayout>
               </LinearLayout>
 
               <TextView android:id="@+id/phase"
                   android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:layout_marginTop="2dp" android:maxLines="1" android:ellipsize="end"
-                  android:textSize="12sp" android:textColor="#B0BEC5" />
+                  android:layout_marginTop="4dp" android:maxLines="1" android:ellipsize="end"
+                  android:textSize="15sp" android:textColor="#E0E6EA" />
               <TextView android:id="@+id/cond"
                   android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:maxLines="1" android:ellipsize="end"
-                  android:textSize="12sp" android:textColor="#FFFFFF" />
+                  android:layout_marginTop="2dp" android:maxLines="2" android:ellipsize="end"
+                  android:textSize="15sp" android:textColor="#FFFFFF" />
 
               <TextView android:id="@+id/station"
                   android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:layout_marginTop="4dp"
+                  android:layout_marginTop="6dp"
                   android:maxLines="1" android:ellipsize="end"
-                  android:textSize="11sp" android:textColor="#B0BEC5" />
+                  android:textSize="13sp" android:textColor="#CFD8DC" />
               <TextView android:id="@+id/updated"
                   android:layout_width="match_parent" android:layout_height="wrap_content"
                   android:maxLines="1" android:ellipsize="end"
-                  android:textSize="10sp" android:textColor="#78909C" />
+                  android:textSize="12sp" android:textColor="#B0BEC5" />
           </LinearLayout>
           EOF
 
@@ -219,11 +225,16 @@ jobs:
 
           import android.Manifest
           import android.app.Activity
+          import android.content.Context
+          import android.content.Intent
           import android.content.pm.PackageManager
+          import android.net.Uri
           import android.os.Build
           import android.os.Bundle
           import android.os.Handler
           import android.os.Looper
+          import android.os.PowerManager
+          import android.provider.Settings
           import android.widget.Button
           import android.widget.LinearLayout
           import android.widget.ScrollView
@@ -235,6 +246,7 @@ jobs:
           class MainActivity : Activity() {
               private lateinit var info: TextView
               private lateinit var button: Button
+              private lateinit var batteryButton: Button
               private lateinit var statusView: TextView
               private lateinit var refreshButton: Button
               private val handler = Handler(Looper.getMainLooper())
@@ -249,13 +261,15 @@ jobs:
                   info.textSize = 16f
                   button = Button(this)
                   button.setOnClickListener { askNext() }
+                  batteryButton = Button(this)
+                  batteryButton.setOnClickListener { askBattery() }
                   statusView = TextView(this)
                   statusView.textSize = 14f
                   statusView.setPadding(0, pad, 0, pad / 2)
                   refreshButton = Button(this)
                   refreshButton.text = "Refresh tides now"
                   refreshButton.setOnClickListener {
-                      refreshNow(this, true, true)
+                      refreshNow(this, true, true, "app button")
                       statusView.text = "Refreshing..."
                       handler.postDelayed({ showStatus() }, 4000)
                       handler.postDelayed({ showStatus() }, 12000)
@@ -264,6 +278,7 @@ jobs:
                   }
                   root.addView(info)
                   root.addView(button)
+                  root.addView(batteryButton)
                   root.addView(refreshButton)
                   root.addView(statusView)
                   val scroll = ScrollView(this)
@@ -276,8 +291,10 @@ jobs:
                   refreshPermissionText()
                   showStatus()
                   schedulePeriodic(this)
+                  scheduleTick(this)
                   if (has(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                      refreshNow(this, false, false)
+                      refreshNow(this, false, false, "app opened")
+                      handler.postDelayed({ showStatus() }, 6000)
                   }
               }
 
@@ -286,6 +303,25 @@ jobs:
 
               private fun needsBackground(): Boolean =
                   Build.VERSION.SDK_INT >= 29 && !has(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+              private fun batteryExempt(): Boolean {
+                  val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                  return pm.isIgnoringBatteryOptimizations(packageName)
+              }
+
+              private fun askBattery() {
+                  try {
+                      startActivity(
+                          Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + packageName))
+                      )
+                  } catch (e: Exception) {
+                      try {
+                          startActivity(
+                              Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + packageName))
+                          )
+                      } catch (e2: Exception) { }
+                  }
+              }
 
               private fun askNext() {
                   if (!has(Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -304,24 +340,31 @@ jobs:
                   super.onRequestPermissionsResult(code, perms, results)
                   refreshPermissionText()
                   if (has(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                      refreshNow(this, true, true)
+                      refreshNow(this, true, true, "permission granted")
                       handler.postDelayed({ showStatus() }, 5000)
                   }
               }
 
               private fun refreshPermissionText() {
                   if (!has(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                      info.text = "Step 1 of 2: allow precise location so the widget can find your nearest NOAA tide station."
+                      info.text = "Step 1 of 3: allow precise location so the widget can find your nearest NOAA tide station."
                       button.text = "Allow location"
                       button.isEnabled = true
                   } else if (needsBackground()) {
-                      info.text = "Step 2 of 2: so the widget can keep updating, choose Location, then Allow all the time."
+                      info.text = "Step 2 of 3: so the widget can keep updating, choose Location, then Allow all the time."
                       button.text = "Allow all the time"
                       button.isEnabled = true
                   } else {
-                      info.text = "Location is set. Add the Tide Widget from your home screen widget list. Tap the widget to refresh it."
-                      button.text = "Done"
+                      info.text = "Location is set. Step 3 of 3: allow background activity so Android does not throttle updates. Then add the Tide Widget from your home screen widget list."
+                      button.text = "Location: done"
                       button.isEnabled = false
+                  }
+                  if (batteryExempt()) {
+                      batteryButton.text = "Background activity: allowed"
+                      batteryButton.isEnabled = false
+                  } else {
+                      batteryButton.text = "Allow background activity"
+                      batteryButton.isEnabled = true
                   }
               }
 
@@ -330,13 +373,14 @@ jobs:
                   val st = p.getString("status", "not run yet")
                   val label = p.getString("label", "none yet")
                   val detail = p.getString("detail", "") ?: ""
+                  val log = p.getString("runlog", "") ?: ""
                   val at = p.getLong("statusAt", 0L)
                   val whenText = if (at > 0L) {
                       SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(at))
                   } else {
                       "-"
                   }
-                  statusView.text = "Station: $label\nLast run ($whenText): $st\n\n$detail"
+                  statusView.text = "Station: $label\nLast run ($whenText): $st\n\nRecent activity:\n$log\n\n$detail"
               }
           }
           EOF
@@ -346,9 +390,11 @@ jobs:
 
           import android.Manifest
           import android.annotation.SuppressLint
+          import android.app.AlarmManager
           import android.app.PendingIntent
           import android.appwidget.AppWidgetManager
           import android.appwidget.AppWidgetProvider
+          import android.content.BroadcastReceiver
           import android.content.ComponentName
           import android.content.Context
           import android.content.Intent
@@ -386,16 +432,19 @@ jobs:
           import java.util.TimeZone
           import java.util.concurrent.CountDownLatch
           import java.util.concurrent.TimeUnit
+          import kotlin.concurrent.thread
 
           // Hours of tide predictions to pull each time.
           private const val HOURS_AHEAD = 24
           private const val HOURS_BEHIND = 8
           private const val ACTION_REFRESH = "com.example.tidewidget.REFRESH"
+          private const val ACTION_TICK = "com.example.tidewidget.TICK"
           private const val HOUR = 3600000L
           private const val STALE_MS = 30L * 60 * 1000
           private const val REFETCH_MS = 3L * HOUR
           private const val OBS_MAX_AGE_MS = 3L * HOUR
           private val OBS_PRODUCTS = listOf("water_level", "water_temperature", "air_temperature", "wind")
+          private val LOCK = Any()
 
           data class TideEvent(val time: Date, val height: Double, val isHigh: Boolean)
           data class Station(val id: String, val name: String, val lat: Double, val lng: Double)
@@ -404,7 +453,8 @@ jobs:
           class TideWidget : AppWidgetProvider() {
               override fun onEnabled(context: Context) {
                   schedulePeriodic(context)
-                  refreshNow(context, true, false)
+                  scheduleTick(context)
+                  refreshNow(context, true, false, "widget added")
               }
 
               override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -412,7 +462,9 @@ jobs:
                       manager.updateAppWidget(id, buildViews(context, manager, id))
                   }
                   schedulePeriodic(context)
-                  refreshNow(context, false, false)
+                  scheduleTick(context)
+                  addLog(context, "widget update received")
+                  runInline(context, goAsync(), false, "widget update")
               }
 
               override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, newOptions: Bundle) {
@@ -420,9 +472,17 @@ jobs:
               }
 
               override fun onReceive(context: Context, intent: Intent) {
-                  if (intent.action == ACTION_REFRESH) {
+                  val action = intent.action
+                  if (action == ACTION_REFRESH) {
+                      addLog(context, "tap received")
+                      prefs(context).edit().putLong("refreshingAt", System.currentTimeMillis()).apply()
                       updateAllWidgets(context)
-                      refreshNow(context, true, true)
+                      refreshNow(context, false, true, "tap job")
+                      runInline(context, goAsync(), true, "tap")
+                  } else if (action == ACTION_TICK) {
+                      scheduleTick(context)
+                      addLog(context, "alarm received")
+                      runInline(context, goAsync(), false, "alarm")
                   } else {
                       super.onReceive(context, intent)
                   }
@@ -430,43 +490,94 @@ jobs:
 
               override fun onDisabled(context: Context) {
                   WorkManager.getInstance(context).cancelUniqueWork("tide-periodic")
+                  cancelTick(context)
               }
           }
 
           class TideWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
               override fun doWork(): Result {
                   val force = inputData.getBoolean("force", false)
-                  val c = applicationContext
-                  return try {
-                      refreshTides(c, force)
-                      updateAllWidgets(c)
-                      Result.success()
-                  } catch (e: Exception) {
-                      setStatus(c, shortErr(e))
-                      updateAllWidgets(c)
-                      if (runAttemptCount < 4) Result.retry() else Result.success()
-                  }
+                  val src = inputData.getString("src") ?: "job"
+                  val ok = doRefresh(applicationContext, force, true, src)
+                  return if (ok || runAttemptCount >= 4) Result.success() else Result.retry()
               }
           }
 
           fun schedulePeriodic(context: Context) {
               val net = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+              val data = Data.Builder().putString("src", "periodic job").build()
               val req = PeriodicWorkRequest.Builder(TideWorker::class.java, 15, TimeUnit.MINUTES)
                   .setConstraints(net)
+                  .setInputData(data)
                   .build()
               WorkManager.getInstance(context)
                   .enqueueUniquePeriodicWork("tide-periodic", ExistingPeriodicWorkPolicy.KEEP, req)
           }
 
-          fun refreshNow(context: Context, force: Boolean, replace: Boolean) {
+          fun refreshNow(context: Context, force: Boolean, replace: Boolean, src: String = "job") {
               val net = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-              val data = Data.Builder().putBoolean("force", force).build()
+              val data = Data.Builder().putBoolean("force", force).putString("src", src).build()
               val req = OneTimeWorkRequest.Builder(TideWorker::class.java)
                   .setConstraints(net)
                   .setInputData(data)
                   .build()
               val policy = if (replace) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
               WorkManager.getInstance(context).enqueueUniqueWork("tide-now", policy, req)
+          }
+
+          private fun tickPending(context: Context): PendingIntent {
+              val i = Intent(context, TideWidget::class.java)
+              i.action = ACTION_TICK
+              return PendingIntent.getBroadcast(context, 1, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+          }
+
+          fun scheduleTick(context: Context) {
+              val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+              am.setAndAllowWhileIdle(
+                  AlarmManager.RTC_WAKEUP,
+                  System.currentTimeMillis() + 15L * 60 * 1000,
+                  tickPending(context)
+              )
+          }
+
+          fun cancelTick(context: Context) {
+              val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+              am.cancel(tickPending(context))
+          }
+
+          // Runs a refresh right away on a background thread, without going through the job queue.
+          fun runInline(context: Context, pending: BroadcastReceiver.PendingResult?, force: Boolean, src: String) {
+              val appCtx = context.applicationContext
+              val worker = thread {
+                  try {
+                      doRefresh(appCtx, force, false, src)
+                  } catch (e: Exception) { }
+              }
+              thread {
+                  try { worker.join(8000) } catch (e: Exception) { }
+                  try { pending?.finish() } catch (e: Exception) { }
+              }
+          }
+
+          fun doRefresh(c: Context, force: Boolean, allowLive: Boolean, src: String): Boolean {
+              val started = System.currentTimeMillis()
+              val p = prefs(c)
+              if (force) p.edit().putLong("refreshingAt", started).apply()
+              var ok = true
+              var msg = "ok"
+              try {
+                  refreshTides(c, force, allowLive)
+                  msg = p.getString("status", "ok") ?: "ok"
+              } catch (e: Exception) {
+                  ok = false
+                  msg = shortErr(e)
+                  setStatus(c, msg)
+              }
+              p.edit().putLong("refreshingAt", 0L).apply()
+              val secs = (System.currentTimeMillis() - started) / 1000
+              addLog(c, src + " done: " + msg.take(36) + " (" + secs + "s)")
+              updateAllWidgets(c)
+              return ok
           }
 
           fun updateAllWidgets(context: Context) {
@@ -479,6 +590,16 @@ jobs:
 
           private fun prefs(c: Context): SharedPreferences =
               c.getSharedPreferences("tide", Context.MODE_PRIVATE)
+
+          private fun addLog(c: Context, text: String) {
+              val p = prefs(c)
+              val stamp = SimpleDateFormat("EEE h:mm:ss a", Locale.getDefault()).format(Date())
+              val old = (p.getString("runlog", "") ?: "").split("\n").filter { it.isNotBlank() }
+              val all = ArrayList<String>()
+              all.add(stamp + "  " + text)
+              all.addAll(old)
+              p.edit().putString("runlog", all.take(14).joinToString("\n")).apply()
+          }
 
           private fun shortErr(e: Exception): String =
               (e.javaClass.simpleName + ": " + (e.message ?: "")).take(90)
@@ -808,9 +929,8 @@ jobs:
               cal.set(Calendar.SECOND, 0)
               cal.set(Calendar.MILLISECOND, 0)
               val jd = cal.timeInMillis / 86400000.0 + 2440587.5
-              val n = Math.ceil(jd - 2451545.0 + 0.0008)
-              val lw = -lng
-              val jStar = n - lw / 360.0
+              val n = Math.round(jd - 2451545.0 + lng / 360.0).toDouble()
+              val jStar = n - lng / 360.0
               val mDeg = (357.5291 + 0.98560028 * jStar) % 360.0
               val m = Math.toRadians(mDeg)
               val c = 1.9148 * Math.sin(m) + 0.02 * Math.sin(2 * m) + 0.0003 * Math.sin(3 * m)
@@ -841,14 +961,14 @@ jobs:
           }
 
           private fun moonPhaseName(age: Double): String = when {
-              age < 1.84 -> "New Moon"
-              age < 5.53 -> "Waxing Crescent"
-              age < 9.22 -> "First Quarter"
-              age < 12.91 -> "Waxing Gibbous"
-              age < 16.61 -> "Full Moon"
-              age < 20.30 -> "Waning Gibbous"
-              age < 23.99 -> "Last Quarter"
-              age < 27.68 -> "Waning Crescent"
+              age < 1.0 -> "New Moon"
+              age < 6.4 -> "Waxing Crescent"
+              age < 8.4 -> "First Quarter"
+              age < 13.8 -> "Waxing Gibbous"
+              age < 15.8 -> "Full Moon"
+              age < 21.1 -> "Waning Gibbous"
+              age < 23.1 -> "Last Quarter"
+              age < 28.5 -> "Waning Crescent"
               else -> "New Moon"
           }
 
@@ -857,10 +977,16 @@ jobs:
 
           // ---------- Refresh ----------
 
-          private fun refreshTides(context: Context, force: Boolean) {
+          private fun refreshTides(context: Context, force: Boolean, allowLive: Boolean) {
+              synchronized(LOCK) {
+                  refreshTidesLocked(context, force, allowLive)
+              }
+          }
+
+          private fun refreshTidesLocked(context: Context, force: Boolean, allowLive: Boolean) {
               val p = prefs(context)
               val hadStation = p.contains("id")
-              val loc = getLocation(context, !hadStation || force)
+              val loc = getLocation(context, allowLive && (!hadStation || force))
               var repicked = false
 
               if (loc != null) {
@@ -984,8 +1110,8 @@ jobs:
               }
               val hi = mx
               val lo = mn
-              val padTop = 13f * dens
-              val padBot = 13f * dens
+              val padTop = 16f * dens
+              val padBot = 16f * dens
               val plotH = h - padTop - padBot
               val span = (end - start).toDouble()
 
@@ -1023,8 +1149,8 @@ jobs:
               c.drawPath(line, linePaint)
 
               val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-              textPaint.color = 0xFFB0BEC5.toInt()
-              textPaint.textSize = 9f * dens
+              textPaint.color = 0xFFFFFFFF.toInt()
+              textPaint.textSize = 12f * dens
               val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG)
               dotPaint.color = 0xFF4FC3F7.toInt()
               for (e in events) {
@@ -1039,7 +1165,7 @@ jobs:
                       else -> Paint.Align.CENTER
                   }
                   val label = String.format(Locale.US, "%.1f", e.height)
-                  val ty = if (e.isHigh) y - 4f * dens else y + 11f * dens
+                  val ty = if (e.isHigh) y - 4f * dens else y + 13f * dens
                   c.drawText(label, x, ty, textPaint)
               }
 
@@ -1091,6 +1217,7 @@ jobs:
 
               val p = prefs(context)
               val status = p.getString("status", "ok") ?: "ok"
+              val refreshing = System.currentTimeMillis() - p.getLong("refreshingAt", 0L) < 60000L
               val cache = readCache(context)
               val nowMs = System.currentTimeMillis()
               val now = Date(nowMs)
@@ -1105,7 +1232,7 @@ jobs:
                   clearAll(v)
                   v.setTextViewText(R.id.status, "Loading tides")
                   v.setTextViewText(R.id.time1, if (status == "ok") "Fetching data..." else status)
-                  v.setTextViewText(R.id.updated, "Tap to retry")
+                  v.setTextViewText(R.id.updated, if (refreshing) "Refreshing..." else "Tap to retry")
                   return v
               }
 
@@ -1129,7 +1256,6 @@ jobs:
               v.setTextViewText(R.id.ht2, ft(second.height))
               v.setTextViewText(R.id.range, "Range " + ft(Math.abs(first.height - second.height)))
 
-              // Observations
               val obs = try { JSONObject(p.getString("obs", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
               val predNow = heightAt(all, nowMs)
               val wl = recentObs(obs, "water_level", nowMs)
@@ -1137,7 +1263,7 @@ jobs:
               if (wl != null) {
                   val ov = wl.optDouble("v")
                   if (predNow != null && wl.optString("id") == (p.getString("id", "") ?: "")) {
-                      nowText = "Now " + ft(ov) + String.format(Locale.US, " (%+.1f ft vs predicted)", ov - predNow)
+                      nowText = "Now " + ft(ov) + String.format(Locale.US, " (%+.1f vs pred)", ov - predNow)
                   } else {
                       nowText = "Now " + ft(ov) + " observed"
                   }
@@ -1161,7 +1287,6 @@ jobs:
               }
               v.setTextViewText(R.id.cond, if (parts.isEmpty()) "No water or wind sensors nearby" else parts.joinToString("  \u00B7  "))
 
-              // Sun, moon
               val lat: Double
               val lng: Double
               if (p.contains("clat")) {
@@ -1189,164 +1314,27 @@ jobs:
               val age = moonAge(nowMs)
               v.setTextViewText(R.id.phase, moonPhaseName(age) + " \u00B7 " + moonIllum(age) + "% lit")
 
-              // Tide curve
               val opts = mgr.getAppWidgetOptions(widgetId)
               val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 300)
               val dens = context.resources.displayMetrics.density
               val wDp = Math.max(160, minW - 24)
               val wPx = Math.min(1400, (wDp * dens).toInt())
-              val hPx = (52 * dens).toInt()
+              val hPx = (100 * dens).toInt()
               v.setImageViewBitmap(R.id.curve, drawCurve(all, nowMs, wPx, hPx, dens))
 
               val okAt = p.getLong("okAt", 0L)
               val fetched = cache?.fetchedAt ?: 0L
               val shown = if (okAt > 0L) okAt else fetched
               val pulled = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(shown))
-              val suffix = if (status == "ok") " \u00B7 tap to refresh" else " \u00B7 retrying"
-              v.setTextViewText(R.id.updated, "Updated " + pulled + suffix)
+              if (refreshing) {
+                  v.setTextViewText(R.id.updated, "Refreshing...")
+              } else {
+                  val suffix = if (status == "ok") " \u00B7 tap to refresh" else " \u00B7 retrying"
+                  v.setTextViewText(R.id.updated, "Updated " + pulled + suffix)
+              }
               return v
           }
           EOF
-      - name: Readability tweaks
-        run: |
-          cat > app/src/main/res/drawable/bg.xml <<'EOF'
-          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-              <solid android:color="#F20B1622" />
-              <corners android:radius="20dp" />
-          </shape>
-          EOF
-
-          cat > app/src/main/res/xml/tide_widget_info.xml <<'EOF'
-          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-              android:minWidth="250dp"
-              android:minHeight="250dp"
-              android:targetCellWidth="4"
-              android:targetCellHeight="4"
-              android:updatePeriodMillis="1800000"
-              android:initialLayout="@layout/widget"
-              android:resizeMode="horizontal|vertical"
-              android:widgetCategory="home_screen" />
-          EOF
-
-          cat > app/src/main/res/layout/widget.xml <<'EOF'
-          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/root"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical"
-              android:padding="12dp"
-              android:background="@drawable/bg">
-
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal">
-                  <TextView android:id="@+id/status"
-                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                      android:maxLines="1"
-                      android:textSize="24sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-                  <TextView android:id="@+id/countdown"
-                      android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:maxLines="1"
-                      android:textSize="16sp" android:textStyle="bold" android:textColor="#FFE082" />
-              </LinearLayout>
-
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal" android:layout_marginTop="6dp">
-                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                      android:layout_weight="1" android:orientation="vertical">
-                      <TextView android:id="@+id/lbl1"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="11sp" android:textStyle="bold" android:letterSpacing="0.08" android:textColor="#CFD8DC" />
-                      <TextView android:id="@+id/time1"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1"
-                          android:textSize="19sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-                      <TextView android:id="@+id/ht1"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="16sp" android:textColor="#FFFFFF" />
-                  </LinearLayout>
-                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                      android:layout_weight="1" android:orientation="vertical">
-                      <TextView android:id="@+id/lbl2"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="11sp" android:textStyle="bold" android:letterSpacing="0.08" android:textColor="#CFD8DC" />
-                      <TextView android:id="@+id/time2"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1"
-                          android:textSize="19sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-                      <TextView android:id="@+id/ht2"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:textSize="16sp" android:textColor="#FFFFFF" />
-                  </LinearLayout>
-              </LinearLayout>
-
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal" android:layout_marginTop="6dp">
-                  <TextView android:id="@+id/now"
-                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                      android:maxLines="1" android:ellipsize="end"
-                      android:textSize="15sp" android:textStyle="bold" android:textColor="#FFFFFF" />
-                  <TextView android:id="@+id/range"
-                      android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:maxLines="1"
-                      android:textSize="15sp" android:textStyle="bold" android:textColor="#80DEEA" />
-              </LinearLayout>
-
-              <ImageView android:id="@+id/curve"
-                  android:layout_width="match_parent" android:layout_height="64dp"
-                  android:layout_marginTop="6dp"
-                  android:scaleType="fitXY" />
-
-              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:orientation="horizontal" android:layout_marginTop="6dp">
-                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                      android:layout_weight="1" android:orientation="vertical">
-                      <TextView android:id="@+id/sun1"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
-                      <TextView android:id="@+id/sun2"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
-                  </LinearLayout>
-                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                      android:layout_weight="1" android:orientation="vertical">
-                      <TextView android:id="@+id/moon1"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
-                      <TextView android:id="@+id/moon2"
-                          android:layout_width="wrap_content" android:layout_height="wrap_content"
-                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
-                  </LinearLayout>
-              </LinearLayout>
-
-              <TextView android:id="@+id/phase"
-                  android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:layout_marginTop="4dp" android:maxLines="1" android:ellipsize="end"
-                  android:textSize="14sp" android:textColor="#E0E6EA" />
-              <TextView android:id="@+id/cond"
-                  android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:layout_marginTop="2dp" android:maxLines="2" android:ellipsize="end"
-                  android:textSize="14sp" android:textColor="#FFFFFF" />
-
-              <TextView android:id="@+id/station"
-                  android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:layout_marginTop="6dp"
-                  android:maxLines="1" android:ellipsize="end"
-                  android:textSize="12sp" android:textColor="#CFD8DC" />
-              <TextView android:id="@+id/updated"
-                  android:layout_width="match_parent" android:layout_height="wrap_content"
-                  android:maxLines="1" android:ellipsize="end"
-                  android:textSize="11sp" android:textColor="#B0BEC5" />
-          </LinearLayout>
-          EOF
-
-          F=app/src/main/java/com/example/tidewidget/TideWidget.kt
-          sed -i 's|val hPx = (52 \* dens).toInt()|val hPx = (64 * dens).toInt()|' $F
-          sed -i 's|textPaint.textSize = 9f \* dens|textPaint.textSize = 12f * dens|' $F
-          sed -i 's|textPaint.color = 0xFFB0BEC5.toInt()|textPaint.color = 0xFFFFFFFF.toInt()|' $F
-          sed -i 's|val padTop = 13f \* dens|val padTop = 16f * dens|' $F
-          sed -i 's|val padBot = 13f \* dens|val padBot = 16f * dens|' $F
-          sed -i 's|y + 11f \* dens|y + 13f * dens|' $F
-          sed -i 's|(%+.1f ft vs predicted)|(%+.1f vs pred.)|' $F  
       - name: Build APK
         run: gradle assembleDebug
       - name: Publish release
