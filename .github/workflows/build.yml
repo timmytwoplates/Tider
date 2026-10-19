@@ -1207,7 +1207,7 @@ jobs:
               return v
           }
           EOF
-             - name: Readability tweaks
+      - name: Readability tweaks
         run: |
           cat > app/src/main/res/drawable/bg.xml <<'EOF'
           <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
