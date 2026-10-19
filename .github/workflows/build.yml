@@ -1207,6 +1207,146 @@ jobs:
               return v
           }
           EOF
+             - name: Readability tweaks
+        run: |
+          cat > app/src/main/res/drawable/bg.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#F20B1622" />
+              <corners android:radius="20dp" />
+          </shape>
+          EOF
+
+          cat > app/src/main/res/xml/tide_widget_info.xml <<'EOF'
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="250dp"
+              android:minHeight="250dp"
+              android:targetCellWidth="4"
+              android:targetCellHeight="4"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/widget"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          EOF
+
+          cat > app/src/main/res/layout/widget.xml <<'EOF'
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/root"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="12dp"
+              android:background="@drawable/bg">
+
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+                  <TextView android:id="@+id/status"
+                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                      android:maxLines="1"
+                      android:textSize="24sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                  <TextView android:id="@+id/countdown"
+                      android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:maxLines="1"
+                      android:textSize="16sp" android:textStyle="bold" android:textColor="#FFE082" />
+              </LinearLayout>
+
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal" android:layout_marginTop="6dp">
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/lbl1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="11sp" android:textStyle="bold" android:letterSpacing="0.08" android:textColor="#CFD8DC" />
+                      <TextView android:id="@+id/time1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1"
+                          android:textSize="19sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/ht1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="16sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/lbl2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="11sp" android:textStyle="bold" android:letterSpacing="0.08" android:textColor="#CFD8DC" />
+                      <TextView android:id="@+id/time2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1"
+                          android:textSize="19sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/ht2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:textSize="16sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
+              </LinearLayout>
+
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal" android:layout_marginTop="6dp">
+                  <TextView android:id="@+id/now"
+                      android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                      android:maxLines="1" android:ellipsize="end"
+                      android:textSize="15sp" android:textStyle="bold" android:textColor="#FFFFFF" />
+                  <TextView android:id="@+id/range"
+                      android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:maxLines="1"
+                      android:textSize="15sp" android:textStyle="bold" android:textColor="#80DEEA" />
+              </LinearLayout>
+
+              <ImageView android:id="@+id/curve"
+                  android:layout_width="match_parent" android:layout_height="64dp"
+                  android:layout_marginTop="6dp"
+                  android:scaleType="fitXY" />
+
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal" android:layout_marginTop="6dp">
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/sun1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/sun2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
+                  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                      android:layout_weight="1" android:orientation="vertical">
+                      <TextView android:id="@+id/moon1"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
+                      <TextView android:id="@+id/moon2"
+                          android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:maxLines="1" android:textSize="14sp" android:textColor="#FFFFFF" />
+                  </LinearLayout>
+              </LinearLayout>
+
+              <TextView android:id="@+id/phase"
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:layout_marginTop="4dp" android:maxLines="1" android:ellipsize="end"
+                  android:textSize="14sp" android:textColor="#E0E6EA" />
+              <TextView android:id="@+id/cond"
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:layout_marginTop="2dp" android:maxLines="2" android:ellipsize="end"
+                  android:textSize="14sp" android:textColor="#FFFFFF" />
+
+              <TextView android:id="@+id/station"
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:layout_marginTop="6dp"
+                  android:maxLines="1" android:ellipsize="end"
+                  android:textSize="12sp" android:textColor="#CFD8DC" />
+              <TextView android:id="@+id/updated"
+                  android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:maxLines="1" android:ellipsize="end"
+                  android:textSize="11sp" android:textColor="#B0BEC5" />
+          </LinearLayout>
+          EOF
+
+          F=app/src/main/java/com/example/tidewidget/TideWidget.kt
+          sed -i 's|val hPx = (52 \* dens).toInt()|val hPx = (64 * dens).toInt()|' $F
+          sed -i 's|textPaint.textSize = 9f \* dens|textPaint.textSize = 12f * dens|' $F
+          sed -i 's|textPaint.color = 0xFFB0BEC5.toInt()|textPaint.color = 0xFFFFFFFF.toInt()|' $F
+          sed -i 's|val padTop = 13f \* dens|val padTop = 16f * dens|' $F
+          sed -i 's|val padBot = 13f \* dens|val padBot = 16f * dens|' $F
+          sed -i 's|y + 11f \* dens|y + 13f * dens|' $F
+          sed -i 's|(%+.1f ft vs predicted)|(%+.1f vs pred.)|' $F  
       - name: Build APK
         run: gradle assembleDebug
       - name: Publish release
